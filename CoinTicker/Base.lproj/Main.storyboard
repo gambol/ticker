@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="18122" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="18122"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="23504"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -26,142 +26,16 @@
                             <modifierMask key="keyEquivalentModifierMask"/>
                             <menu key="submenu" title="Exchange" id="fga-XW-why" userLabel="Exchange Sub Menu">
                                 <items>
-                                    <menuItem title="Bibox" tag="100" id="mPv-Wq-TNr">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="jed-em-rnP"/>
-                                        </connections>
-                                    </menuItem>
                                     <menuItem title="Binance" state="on" tag="200" id="QjD-IZ-7n9">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                         <connections>
                                             <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="rww-wG-xh7"/>
                                         </connections>
                                     </menuItem>
-                                    <menuItem title="Bitfinex" tag="205" id="jVf-dv-I03">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="NXD-vF-TMb"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="Bithumb" tag="207" id="zhy-Te-VdY">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="bXC-mn-5EW"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="Bitstamp" tag="210" id="Tbe-f7-Epu">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="dUd-AL-J0Z"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="Bittrex" tag="225" id="Pde-7u-X42">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="NPA-sP-cEF"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="Bit-Z" tag="230" id="Sdd-vl-X4d">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="iVi-Dd-Ne5"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="BTCTurk" tag="233" id="VUp-hv-IJn" userLabel="BTCTurk">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="Qxh-g7-o1p"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="Coinbase Pro" tag="240" id="deQ-Xh-l5A">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="F1P-aa-4dD"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="Coincheck" tag="235" id="Flo-pw-qiD">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="pcG-RS-VGl"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="Coinone" tag="237" id="So7-Vt-2Q9">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="Mkp-jD-qet"/>
-                                        </connections>
-                                    </menuItem>
                                     <menuItem title="Gate.io" tag="239" id="r4W-dz-PeK">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                         <connections>
                                             <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="RPb-aZ-qZl"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="HitBTC" tag="241" id="POr-JF-fef">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="UkX-oy-eT4"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="Huobi Pro" tag="243" id="7sG-AA-ZZk">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="T2J-aS-6yB"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="Korbit" tag="245" id="Sg8-ZZ-6gG">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="ekL-kf-J2R"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="Kraken" tag="250" id="cvw-YE-9dO">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="P21-ms-0JY"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="KuCoin" tag="255" id="5Gg-7B-m4W">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="Txf-UP-rzk"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="LBank" tag="260" id="pY8-hS-t8h">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="Z0E-34-hQt"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="OKEx" tag="275" id="7LC-YN-Ox5">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="imW-3c-KFh"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="Paribu" tag="290" id="T6N-10-8Mm" userLabel="Paribu">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="p1q-gv-5yc"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="Poloniex" tag="300" id="Fwf-4X-da0">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="USk-V9-VLU"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="UPbit" tag="350" id="8Kp-5g-Uop">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="gXd-Qg-YcQ"/>
-                                        </connections>
-                                    </menuItem>
-                                    <menuItem title="ZB.COM" tag="400" id="Swn-Mm-s5C">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                        <connections>
-                                            <action selector="onSelectExchangeSiteWithSender:" target="Voe-Tx-rLC" id="P4o-qa-vc2"/>
                                         </connections>
                                     </menuItem>
                                 </items>

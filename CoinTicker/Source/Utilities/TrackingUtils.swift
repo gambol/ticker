@@ -25,7 +25,7 @@
 //
 
 import Cocoa
-import AppCenterAnalytics
+//import AppCenterAnalytics
 
 enum TrackedEvent: String {
     case selectExchange = "Select Exchange"
@@ -47,7 +47,7 @@ enum TrackedEventAttributes: String {
 struct TrackingUtils {
 
     static func log(_ event: TrackedEvent, withAttributes attributes: [String: String]? = nil) {
-        Analytics.trackEvent(event.rawValue, withProperties: attributes)
+//        Analytics.trackEvent(event.rawValue, withProperties: attributes)
     }
 
     static func didSelectExchange(_ exchangeName: String) {
