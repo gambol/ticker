@@ -27,10 +27,10 @@
 import Foundation
 import SwiftyJSON
 
-class GateIOExchange: Exchange {
+class CoinGecko: Exchange {
     
     private struct Constants {
-        static let CoinsListAPIPath = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=500&page=1"
+        static let CoinsListAPIPath = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1"
         static let PriceAPIPathFormat = "https://api.coingecko.com/api/v3/simple/price?ids=%@&vs_currencies=%@"
     }
     

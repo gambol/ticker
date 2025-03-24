@@ -68,7 +68,7 @@ enum ExchangeSite: Int, Codable {
         case .btcturk: return BTCTurkExchange(delegate: delegate)
         case .coincheck: return CoincheckExchange(delegate: delegate)
         case .coinone: return CoinoneExchange(delegate: delegate)
-        case .gateio: return GateIOExchange(delegate: delegate)
+        case .gateio: return CoinGecko(delegate: delegate)
         case .gdax: return GDAXExchange(delegate: delegate)
         case .hitbtc: return HitBTCExchange(delegate: delegate)
         case .huobi: return HuobiExchange(delegate: delegate)
