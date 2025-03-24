@@ -31,6 +31,12 @@ struct Currency: Codable {
     var code: String
     var customDisplayName: String?
     var customSymbol: String?
+    
+    init?(customDisplayName: String? = nil, customSymbol: String? = nil) {
+        self.code =  customSymbol ?? "1234"
+        self.customDisplayName = customDisplayName
+        self.customSymbol = customSymbol
+    }
 
     init?(code: String?, customDisplayName: String? = nil, customSymbol: String? = nil) {
         guard var normalizedCode = code?.uppercased(), normalizedCode != "123" else {
@@ -50,7 +56,8 @@ struct Currency: Codable {
     var displayName: String {
         let displayNameKey = "currency.\(internalCode.lowercased()).title"
         let displayName = customDisplayName ?? String.LocalizedStringWithFallback(displayNameKey, comment: "Currency Title")
-        return (displayName != displayNameKey && displayName != code ? "\(code) (\(displayName))" : code)
+        
+        return (displayName != displayNameKey && displayName != code ? displayName : code)
     }
 
     var symbol: String? {

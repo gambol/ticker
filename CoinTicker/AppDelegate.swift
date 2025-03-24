@@ -45,7 +45,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let reachabilityManager = Alamofire.NetworkReachabilityManager()!
 
-    private var currentExchange: Exchange!
+    public var currentExchange: Exchange!
+    
+    private var cryptoSelectionPopover: NSPopover?
+    private var eventMonitor: Any?
 
     // MARK: NSApplicationDelegate
     func applicationDidFinishLaunching(_ aNotification: Notification) {
@@ -72,9 +75,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Load defaults
         currentExchange = TickerConfig.defaultExchange
         currentExchange.delegate = self
-        exchangeMenuItem.submenu?.items.forEach({ $0.state = ($0.tag == currentExchange.site.rawValue ? .on : .off) })
-        updateIntervalMenuItem.submenu?.items.forEach({ $0.state = ($0.tag == currentExchange.updateInterval ? .on : .off )})
+//        exchangeMenuItem.submenu?.items.forEach({ $0.state = ($0.tag == currentExchange.site.rawValue ? .on : .off) })
+//        updateIntervalMenuItem.submenu?.items.forEach({ $0.state = ($0.tag == currentExchange.updateInterval ? .on : .off )})
         showIconMenuItem.state = (TickerConfig.showsIcon ? .on : .off)
+        
 
         // Listen for network status
         let reachabilityQueue = DispatchQueue(label: "cointicker.reachability", qos: .utility, attributes: [.concurrent])
@@ -92,9 +96,135 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    
+
+
+    // 显示币种选择弹窗
+    @IBAction func showCryptoSelectionPopover(_ sender: NSMenuItem) {
+//        if cryptoSelectionPopover == nil {
+//            // 创建弹窗
+//            let cryptoSelectionVC = CryptoSelectionViewController(nibName: "CryptoSelectionViewController", bundle: nil)
+//            
+//            cryptoSelectionPopover = NSPopover()
+//            cryptoSelectionPopover?.contentViewController = cryptoSelectionVC
+//            cryptoSelectionPopover?.behavior = .transient
+//            // 添加点击外部关闭弹窗的监听器
+//            eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+//                if let strongSelf = self, strongSelf.cryptoSelectionPopover?.isShown == true {
+//                    strongSelf.cryptoSelectionPopover?.close()
+//                }
+//            }
+//        }
+//        
+//        // 显示弹窗
+//        if let popover = cryptoSelectionPopover {
+//            if popover.isShown {
+//                popover.close()
+//            } else {
+//                popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
+//            }
+//        }
+        
+        print("准备显示弹窗")// 创建视图控制器
+//               let cryptoSelectionVC = CryptoSelectionViewController(nibName: "CryptoSelectionViewController", bundle: nil)
+//               
+//               // 确保视图已加载
+//               _ = cryptoSelectionVC.view// 创建并配置popover
+//               if cryptoSelectionPopover == nil {
+//                   cryptoSelectionPopover = NSPopover()
+//                   cryptoSelectionPopover?.contentSize = NSSize(width: 300, height: 400)
+//                   cryptoSelectionPopover?.behavior = .transient
+//                   // 添加点击外部关闭弹窗的监听器
+//                   if eventMonitor == nil {
+//                       eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+//                           guard let self = self,let popover = self.cryptoSelectionPopover,popover.isShown else { return }
+//                       popover.close()
+//                       }
+//                   }
+//               }
+//               
+//               // 设置内容视图控制器
+//               cryptoSelectionPopover?.contentViewController = cryptoSelectionVC
+//               
+//               // 显示弹窗
+//               if let popover = cryptoSelectionPopover {
+//                   if popover.isShown {
+//                       popover.close()
+//                       print("关闭已显示的弹窗")
+//                   } else {
+//                       // 确保按钮存在且有界面区域
+//                       if sender.frame.isEmpty {
+//                           print("警告：按钮frame为空")
+//                       }// 显示弹窗，相对于状态栏按钮
+//                       popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
+//                       print("弹窗已调用show方法")
+//                   }
+//               } else {
+//                   print("错误：popover对象为nil")
+//               }
+        print("➡️ 准备显示加密货币选择弹窗")
+           // 调试已有popover状态
+           if let existingPopover = cryptoSelectionPopover {
+               print("已有popover对象: \(existingPopover), 是否已显示: \(existingPopover.isShown)")
+           } else {
+               print("popover对象为nil，将创建新的")
+           }
+           
+           // 创建视图控制器前后添加日志
+           print("开始创建内容视图控制器")
+        
+        let storyboard = NSStoryboard(name: "Main", bundle: nil)
+
+        if let cryptoSelectionVC = storyboard.instantiateController(withIdentifier: "CryptoSelectionViewController") as? CryptoSelectionViewController {
+            
+            //           let cryptoSelectionVC = CryptoSelectionViewController(nibName: "CryptoSelectionViewController", bundle: nil)
+            print("✓ 内容视图控制器已创建: \(cryptoSelectionVC)")// 测试NIB文件是否能正确加载
+            print("尝试加载视图")
+            let viewLoaded = cryptoSelectionVC.view != nil
+            print(viewLoaded ? "✓ 视图已成功加载" : "✗ 视图加载失败")
+            
+            // Popover创建与配置
+            if cryptoSelectionPopover == nil {
+                print("创建新的popover")
+                cryptoSelectionPopover = NSPopover()
+                cryptoSelectionPopover?.behavior = .transient
+                print("✓ 新popover已创建")
+            }// 设置内容视图控制器
+            cryptoSelectionPopover?.contentViewController = cryptoSelectionVC
+            print("✓ 已设置内容视图控制器")
+            
+            // 显示popover前检查
+            print("准备显示popover")
+            
+            
+            //           print("发送者: \(sender), 边界: \(sender.bounds),窗口: \(String(describing: sender.window))")// 显示popover
+            if let statusBarButton = statusItem.button {
+                if let popover = cryptoSelectionPopover {
+                    popover.show(relativeTo: statusBarButton.bounds, of: statusBarButton, preferredEdge: .minY)
+                    
+                    print("✓ 已调用popover.show方法")
+                    
+                    // 显示后检查
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        print("Popover是否显示: \(popover.isShown)")
+                    }
+                }
+            }
+            
+            print("Popover尺寸: \(cryptoSelectionPopover?.contentSize ?? .zero)")
+        }
+
+    }
+    
+    
     func applicationWillTerminate(_ aNotification: Notification) {
         NSWorkspace.shared.notificationCenter.removeObserver(self)
         currentExchange?.stop()
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
+        }
+        
     }
 
     // MARK: Notifications

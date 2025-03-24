@@ -66,17 +66,26 @@ class GateIOExchange: Exchange {
     
     // 处理CoinGecko响应的辅助方法
     private func processCoinGeckoResponse(_ json: JSON) -> [CurrencyPair] {
+        guard let quoteCurrency = Currency(code:"USD") else  {
+            return []
+        }
+        
         return json.arrayValue.compactMap { data -> CurrencyPair? in
             let id = data["id"].stringValue
             let symbol = data["symbol"].stringValue.uppercased()
             let marketCap = data["market_cap"].doubleValue
+            let name = data["name"].stringValue
             // 存储市值信息
             self.marketCaps[id] = marketCap
-            print("Coin: \(symbol), ID: \(id), Market Cap: \(marketCap)")
+            print("Coin: \(symbol), ID: \(id),  Market Cap: \(marketCap)")
+            
+            guard let base = Currency(customDisplayName: name, customSymbol: symbol) else  {
+                return nil
+            }
             
             return CurrencyPair(
-                baseCurrency: symbol,
-                quoteCurrency: "USD",
+                baseCurrency: base,
+                quoteCurrency: quoteCurrency,
                 customCode: id,
                 marketCap: marketCap
             )

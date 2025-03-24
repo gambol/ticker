@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1408F1C22D90E3E0004045C9 /* CryptoSelectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1408F1C12D90E3D6004045C9 /* CryptoSelectionViewController.swift */; };
 		700DF5E11EFF8E5700B53BDE /* KorbitExchange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 700DF5E01EFF8E5100B53BDE /* KorbitExchange.swift */; };
 		701CDD562001798900A8D74C /* LocalizedStringWithFallback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 701CDD552001798900A8D74C /* LocalizedStringWithFallback.swift */; };
 		701CDD582002EA0300A8D74C /* BittrexExchange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 701CDD572002EA0300A8D74C /* BittrexExchange.swift */; };
@@ -25,7 +26,7 @@
 		704AB31D1FEF18D700AFAF42 /* BinanceExchange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704AB31C1FEF18D700AFAF42 /* BinanceExchange.swift */; };
 		705F48541EDE3A29009A629D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 705F48531EDE3A29009A629D /* AppDelegate.swift */; };
 		705F48581EDE3A29009A629D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 705F48571EDE3A29009A629D /* Assets.xcassets */; };
-		705F485B1EDE3A29009A629D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 705F48591EDE3A29009A629D /* Main.storyboard */; };
+		705F485B1EDE3A29009A629D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 705F48591EDE3A29009A629D /* Main.storyboard */; settings = {ASSET_TAGS = (1001, ); }; };
 		70621C562095313200A5A450 /* LBankExchange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70621C552095313200A5A450 /* LBankExchange.swift */; };
 		70621C582095407100A5A450 /* GateIOExchange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70621C572095407100A5A450 /* GateIOExchange.swift */; };
 		7096A532200C531700A5A758 /* BithumbExchange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7096A531200C531700A5A758 /* BithumbExchange.swift */; };
@@ -47,6 +48,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1408F1C12D90E3D6004045C9 /* CryptoSelectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoSelectionViewController.swift; sourceTree = "<group>"; };
 		700DF5E01EFF8E5100B53BDE /* KorbitExchange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KorbitExchange.swift; sourceTree = "<group>"; };
 		700DF5E21EFF932700B53BDE /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Main.strings; sourceTree = "<group>"; };
 		700DF5E31EFF932700B53BDE /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -210,6 +212,7 @@
 		705F48621EDE3EC2009A629D /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				1408F1C12D90E3D6004045C9 /* CryptoSelectionViewController.swift */,
 				703581D91EDFD1A7003FDF3E /* Currency.swift */,
 				704462C41FC1FE5400AB2A88 /* CurrencyPair.swift */,
 				703581D51EDE580B003FDF3E /* Exchange.swift */,
@@ -268,6 +271,9 @@
 		705F48481EDE3A29009A629D /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				KnownAssetTags = (
+					1001,
+				);
 				LastSwiftUpdateCheck = 0830;
 				LastUpgradeCheck = 1200;
 				ORGANIZATIONNAME = "Alec Ananian";
@@ -367,6 +373,7 @@
 				FDE0ABE8201E94E100075590 /* ParibuExchange.swift in Sources */,
 				701CDD5E2005D25300A8D74C /* PoloniexExchange.swift in Sources */,
 				709A81C220E1FEFE003FEF81 /* UPbitExchange.swift in Sources */,
+				1408F1C22D90E3E0004045C9 /* CryptoSelectionViewController.swift in Sources */,
 				70C19EA11EEA328F00B668AB /* KrakenExchange.swift in Sources */,
 				70621C582095407100A5A450 /* GateIOExchange.swift in Sources */,
 				700DF5E11EFF8E5700B53BDE /* KorbitExchange.swift in Sources */,
