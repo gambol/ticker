@@ -20,6 +20,9 @@ class CryptoSelectionViewController: NSViewController {
     
     private var allCurrencyPairs = [CurrencyPair]()
     private var filteredCurrencyPairs = [CurrencyPair]()
+    // 添加临时存储用户选择
+    public var tempSelectedCurrencies = Set<String>() // 存储币种代码
+    
     override func viewDidLoad() {
         super.viewDidLoad()// 配置表格视图
         tableView.delegate = self
@@ -39,6 +42,10 @@ class CryptoSelectionViewController: NSViewController {
             
             allCurrencyPairs = Array(uniquePairs)
             filteredCurrencyPairs = allCurrencyPairs
+            
+            for pair in appDelegate.currentExchange.selectedCurrencyPairs {
+                            tempSelectedCurrencies.insert(pair.baseCurrency.code)
+                        }
             
             print("Loaded \(allCurrencyPairs.count) currency pairs")
             tableView.reloadData()
@@ -115,11 +122,14 @@ class CryptoSelectionViewController: NSViewController {
     private func updateFilteredCurrencies() {
         let searchText = searchField.stringValue.lowercased()
         let hideUnselected = hideUnselectedCheckbox.state == .on
-            filteredCurrencyPairs = allCurrencyPairs.filter { pair in
+        
+        filteredCurrencyPairs = allCurrencyPairs.filter { pair in
             // 如果选择了"hide unselected"，只显示已选择的币种
-            if hideUnselected && !appDelegate!.currentExchange.isCurrencyPairSelected(baseCurrency: pair.baseCurrency) {
+            if hideUnselected && !tempSelectedCurrencies.contains(pair.baseCurrency.code) {
                 return false
-            }// 处理搜索过滤
+            }
+            
+            // 处理搜索过滤
             if !searchText.isEmpty {
                 return pair.baseCurrency.code.lowercased().contains(searchText) ||
                        pair.baseCurrency.displayName.lowercased().contains(searchText)
@@ -130,6 +140,7 @@ class CryptoSelectionViewController: NSViewController {
         
         tableView.reloadData()
     }
+
     
 //    // 在自定义视图控制器中实现此方法
 //    override func viewServiceDidTerminateWithError(_ error: Error) {
@@ -167,7 +178,10 @@ extension CryptoSelectionViewController: NSTableViewDelegate, NSTableViewDataSou
             cellView?.subviews.forEach { $0.removeFromSuperview() }
             
             let checkbox = NSButton(checkboxWithTitle: "", target: self, action: #selector(checkboxClicked(_:)))
-            checkbox.state = appDelegate?.currentExchange.isCurrencyPairSelected(baseCurrency: currencyPair.baseCurrency) ?? false ? .on : .off
+
+            // 使用临时存储来确定复选框状态
+            checkbox.state = tempSelectedCurrencies.contains(currencyPair.baseCurrency.code) ? .on : .off
+            
             checkbox.tag = row
             // 添加复选框并设置约束
             cellView?.addSubview(checkbox)
@@ -273,11 +287,15 @@ extension CryptoSelectionViewController: NSTableViewDelegate, NSTableViewDataSou
         guard row < filteredCurrencyPairs.count else { return }
         
         let currencyPair = filteredCurrencyPairs[row]
+        let currencyCode = currencyPair.baseCurrency.code
         
-        // 获取默认报价货币 (USD/USDT)
-        let quoteCurrency = appDelegate!.currentExchange.availableCurrencyPairs
-            .first(where: { $0.baseCurrency == currencyPair.baseCurrency })?.quoteCurrency ?? Currency(code: "USD")!// 切换该币种的选择状态
-        appDelegate?.currentExchange.toggleCurrencyPair(baseCurrency: currencyPair.baseCurrency, quoteCurrency: quoteCurrency)
+        // 更新临时存储而不是直接更新 currentExchange
+        if sender.state == .on {
+            tempSelectedCurrencies.insert(currencyCode)
+        } else {
+            tempSelectedCurrencies.remove(currencyCode)
+        }
+        
         // 如果启用了"hide unselected"，更新过滤列表
         if hideUnselectedCheckbox.state == .on {
             updateFilteredCurrencies()
@@ -286,4 +304,5 @@ extension CryptoSelectionViewController: NSTableViewDelegate, NSTableViewDataSou
             tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integer: 0))
         }
     }
+
 }

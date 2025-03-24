@@ -101,67 +101,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // 显示币种选择弹窗
     @IBAction func showCryptoSelectionPopover(_ sender: NSMenuItem) {
-//        if cryptoSelectionPopover == nil {
-//            // 创建弹窗
-//            let cryptoSelectionVC = CryptoSelectionViewController(nibName: "CryptoSelectionViewController", bundle: nil)
-//            
-//            cryptoSelectionPopover = NSPopover()
-//            cryptoSelectionPopover?.contentViewController = cryptoSelectionVC
-//            cryptoSelectionPopover?.behavior = .transient
-//            // 添加点击外部关闭弹窗的监听器
-//            eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
-//                if let strongSelf = self, strongSelf.cryptoSelectionPopover?.isShown == true {
-//                    strongSelf.cryptoSelectionPopover?.close()
-//                }
-//            }
-//        }
-//        
-//        // 显示弹窗
-//        if let popover = cryptoSelectionPopover {
-//            if popover.isShown {
-//                popover.close()
-//            } else {
-//                popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
-//            }
-//        }
-        
-        print("准备显示弹窗")// 创建视图控制器
-//               let cryptoSelectionVC = CryptoSelectionViewController(nibName: "CryptoSelectionViewController", bundle: nil)
-//               
-//               // 确保视图已加载
-//               _ = cryptoSelectionVC.view// 创建并配置popover
-//               if cryptoSelectionPopover == nil {
-//                   cryptoSelectionPopover = NSPopover()
-//                   cryptoSelectionPopover?.contentSize = NSSize(width: 300, height: 400)
-//                   cryptoSelectionPopover?.behavior = .transient
-//                   // 添加点击外部关闭弹窗的监听器
-//                   if eventMonitor == nil {
-//                       eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
-//                           guard let self = self,let popover = self.cryptoSelectionPopover,popover.isShown else { return }
-//                       popover.close()
-//                       }
-//                   }
-//               }
-//               
-//               // 设置内容视图控制器
-//               cryptoSelectionPopover?.contentViewController = cryptoSelectionVC
-//               
-//               // 显示弹窗
-//               if let popover = cryptoSelectionPopover {
-//                   if popover.isShown {
-//                       popover.close()
-//                       print("关闭已显示的弹窗")
-//                   } else {
-//                       // 确保按钮存在且有界面区域
-//                       if sender.frame.isEmpty {
-//                           print("警告：按钮frame为空")
-//                       }// 显示弹窗，相对于状态栏按钮
-//                       popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
-//                       print("弹窗已调用show方法")
-//                   }
-//               } else {
-//                   print("错误：popover对象为nil")
-//               }
+
         print("➡️ 准备显示加密货币选择弹窗")
            // 调试已有popover状态
            if let existingPopover = cryptoSelectionPopover {
@@ -188,6 +128,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 print("创建新的popover")
                 cryptoSelectionPopover = NSPopover()
                 cryptoSelectionPopover?.behavior = .transient
+                // 添加关闭通知监听
+                NotificationCenter.default.addObserver(self,
+                                                      selector: #selector(popoverDidClose(_:)),
+                                                      name: NSPopover.didCloseNotification,
+                                                      object: nil)
+                
                 print("✓ 新popover已创建")
             }// 设置内容视图控制器
             cryptoSelectionPopover?.contentViewController = cryptoSelectionVC
@@ -212,13 +158,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             
             print("Popover尺寸: \(cryptoSelectionPopover?.contentSize ?? .zero)")
+            
         }
 
+    }
+    
+    @objc func popoverDidClose(_ notification: Notification) {
+        // 确保是我们的 popover
+        if let closedPopover = notification.object as? NSPopover,
+           closedPopover == cryptoSelectionPopover,
+           let cryptoVC = closedPopover.contentViewController as? CryptoSelectionViewController {
+            
+            // 应用用户选择
+            applySelectedCurrencies(cryptoVC.tempSelectedCurrencies)
+        }
     }
     
     
     func applicationWillTerminate(_ aNotification: Notification) {
         NSWorkspace.shared.notificationCenter.removeObserver(self)
+        NotificationCenter.default.removeObserver(self) // 添加这一行
+        
         currentExchange?.stop()
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
@@ -412,23 +372,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 return "\(self.currencyFormatter.string(for: price * 1e8)!) sat"
             } else if price > 0 {
                 // ex: 0.0007330
-                numFractionDigits = 7
+                numFractionDigits = 6
             }
         } else if price < 0.01 {
             // ex: 0.009789
-            numFractionDigits = 6
+            numFractionDigits = 4
         } else if price < 0.1 {
             // ex: 0.04500
-            numFractionDigits = 5
+            numFractionDigits = 3
         } else if price < 1 {
             // ex: 0.1720
-            numFractionDigits = 4
+            numFractionDigits = 2
         } else if price < 10 {
             // ex: 9.506
-            numFractionDigits = 3
+            numFractionDigits = 1
         } else {
             // ex: 14,560.00
-            numFractionDigits = 2
+            numFractionDigits = 0
         }
 
         self.currencyFormatter.minimumFractionDigits = numFractionDigits
@@ -463,5 +423,28 @@ extension AppDelegate: ExchangeDelegate {
     func exchangeDidUpdatePrices(_ exchange: Exchange) {
         updatePrices()
     }
+    
+    func applySelectedCurrencies(_ selectedCurrencyCodes: Set<String>) {
+            // 清除当前所有选择
+            let currentSelected = currentExchange.selectedCurrencyPairs
+            for pair in currentSelected {
+                currentExchange.toggleCurrencyPair(baseCurrency: pair.baseCurrency, quoteCurrency: pair.quoteCurrency)
+            }
+            
+            // 应用新的选择
+            for code in selectedCurrencyCodes {
+                if let currencyPair = currentExchange.availableCurrencyPairs.first(where: { $0.baseCurrency.code == code }) {
+                    // 获取默认报价货币 (USD/USDT)
+                    let quoteCurrency = currencyPair.quoteCurrency
+                    currentExchange.toggleCurrencyPair(baseCurrency: currencyPair.baseCurrency, quoteCurrency: quoteCurrency)
+                }
+            }
+            
+            // 保存新数据
+            TickerConfig.save(currentExchange)
+            
+            // 更新菜单项和价格
+            updateMenuItems()
+        }
 
 }
