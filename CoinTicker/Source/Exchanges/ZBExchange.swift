@@ -58,7 +58,7 @@ class ZBExchange: Exchange {
 
     override internal func fetch() {
         let apiPath: String
-        if selectedCurrencyPairs.count == 1, let currencyPair = selectedCurrencyPairs.first {
+        if menuBarCurrencies.count == 1, let currencyPair = menuBarCurrencies.first {
             apiPath = String(format: Constants.SingleTickerAPIPathFormat, currencyPair.customCode)
         } else {
             apiPath = Constants.FullTickerAPIPath
@@ -67,10 +67,10 @@ class ZBExchange: Exchange {
         requestAPI(apiPath).map { [weak self] result in
             if let strongSelf = self {
                 let data = result.json
-                if strongSelf.selectedCurrencyPairs.count == 1, let currencyPair = strongSelf.selectedCurrencyPairs.first {
+                if strongSelf.menuBarCurrencies.count == 1, let currencyPair = strongSelf.menuBarCurrencies.first {
                     strongSelf.setPrice(data["ticker"]["last"].doubleValue, for: currencyPair)
                 } else {
-                    strongSelf.selectedCurrencyPairs.forEach({ currencyPair in
+                    strongSelf.menuBarCurrencies.forEach({ currencyPair in
                         if let priceData = data[currencyPair.customCode.replacingOccurrences(of: "_", with: "")].dictionary?["last"] {
                             strongSelf.setPrice(priceData.doubleValue, for: currencyPair)
                         }

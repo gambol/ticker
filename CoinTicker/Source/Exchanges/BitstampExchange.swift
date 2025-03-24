@@ -61,7 +61,7 @@ class BitstampExchange: Exchange {
     }
 
     private func fetchAPI() {
-        _ = when(resolved: selectedCurrencyPairs.map({ currencyPair -> Promise<ExchangeAPIResponse> in
+        _ = when(resolved: menuBarCurrencies.map({ currencyPair -> Promise<ExchangeAPIResponse> in
             let apiRequestPath = String(format: Constants.TickerAPIPathFormat, currencyPair.customCode)
             return requestAPI(apiRequestPath, for: currencyPair)
         })).map { [weak self] results in
@@ -87,7 +87,7 @@ class BitstampExchange: Exchange {
             socket.onEvent = { [weak self] event in
                 switch event {
                 case .connected(_):
-                    self?.selectedCurrencyPairs.forEach({ currencyPair in
+                    self?.menuBarCurrencies.forEach({ currencyPair in
                         let json = JSON([
                             "event": "bts:subscribe",
                             "data": [

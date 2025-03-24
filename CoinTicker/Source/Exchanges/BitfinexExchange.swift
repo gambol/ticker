@@ -92,7 +92,7 @@ class BitfinexExchange: Exchange {
             socket.callbackQueue = socketResponseQueue
 
             var channelIds =  [String: Int]()
-            selectedCurrencyPairs.forEach({ channelIds[$0.customCode] = 0 })
+            menuBarCurrencies.forEach({ channelIds[$0.customCode] = 0 })
             socket.onEvent = { [weak self] event in
                 switch event {
                 case .connected(_):
@@ -134,7 +134,7 @@ class BitfinexExchange: Exchange {
             socket.connect()
             self.socket = socket
         } else {
-            let productIds: [String] = selectedCurrencyPairs.map({ $0.customCode })
+            let productIds: [String] = menuBarCurrencies.map({ $0.customCode })
             let apiPath = String(format: Constants.TickerAPIPathFormat, productIds.joined(separator: ","))
             requestAPI(apiPath).map { [weak self] result in
                 result.json.arrayValue.forEach({ result in

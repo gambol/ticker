@@ -26,6 +26,8 @@ class CryptoSelectionViewController: NSViewController {
     // 添加临时存储用户选择
     public var tempSelectedCurrencies = Set<String>() // 存储币种代码
     
+    public var tempSelectedCoinGeckoIds = Set<String>() // 存储币种代码
+    
     override func viewDidLoad() {
         super.viewDidLoad()// 配置表格视图
         tableView.delegate = self
@@ -46,11 +48,15 @@ class CryptoSelectionViewController: NSViewController {
             allCurrencyPairs = Array(uniquePairs)
             filteredCurrencyPairs = allCurrencyPairs
             
-            for pair in appDelegate.currentExchange.selectedCurrencyPairs {
-                            tempSelectedCurrencies.insert(pair.baseCurrency.code)
-                        }
+            tempSelectedCurrencies = TickerConfig.selectedCurrencyCodesFromPopover
+            tempSelectedCoinGeckoIds = TickerConfig.userDefaultsFetchCoingeckoCoinIds
+
             
-            print("Loaded \(allCurrencyPairs.count) currency pairs")
+//            for pair in appDelegate.currentExchange.selectedCurrencyPairs {
+//                            tempSelectedCurrencies.insert(pair.baseCurrency.code)
+//                        }
+            
+//            print("Loaded \(allCurrencyPairs.count) currency pairs")
             tableView.reloadData()
         }
         
@@ -140,8 +146,10 @@ class CryptoSelectionViewController: NSViewController {
              if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
                  appDelegate.cryptoSelectionPopover?.close()
                  
+                 TickerConfig.savePopoverSelection(tempSelectedCurrencies)
+                 TickerConfig.saveFetchCoinIds(tempSelectedCoinGeckoIds)
                  // 应用用户选择
-                 appDelegate.applySelectedCurrencies(tempSelectedCurrencies)
+//                 appDelegate.applySelectedCurrencies(tempSelectedCurrencies)
              }
       }
     
@@ -334,8 +342,10 @@ extension CryptoSelectionViewController: NSTableViewDelegate, NSTableViewDataSou
         // 更新临时存储而不是直接更新 currentExchange
         if sender.state == .on {
             tempSelectedCurrencies.insert(currencyCode)
+            tempSelectedCoinGeckoIds.insert(currencyPair.customCode)
         } else {
             tempSelectedCurrencies.remove(currencyCode)
+            tempSelectedCoinGeckoIds.remove(currencyPair.customCode)
         }
         
         // 如果启用了"hide unselected"，更新过滤列表

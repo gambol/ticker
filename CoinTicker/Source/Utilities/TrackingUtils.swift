@@ -73,5 +73,43 @@ struct TrackingUtils {
             log(.hideIcon)
         }
     }
+    
+    static func logWithStack(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
+        // 获取并格式化当前时间
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH:mm:ss.SSS"
+        let timeString = dateFormatter.string(from: Date())
+        
+        // 获取文件名（不含路径）
+        let fileName = URL(fileURLWithPath: file).lastPathComponent
+        
+        // 打印时间、文件名、函数名和行号
+        print("[\(timeString)] \(fileName):\(line) \(function) - \(message)")
+        
+        // 打印完整的调用堆栈（跳过前两个）
+        let stackSymbols = Thread.callStackSymbols.dropFirst(2).prefix(5)
+        if !stackSymbols.isEmpty {
+            print("  Call Stack:")
+            for (index, symbol) in stackSymbols.enumerated() {
+                // 简化但保留更多信息
+                let parts = symbol.split(separator: " ").filter { !$0.isEmpty }
+                if parts.count >= 4 {
+                    // 通常格式是: "2   AppName  0x00000001234  AppName.ClassName.methodName + 123"
+                    let moduleIndex = 0
+                    let addressIndex = 2
+                    let symbolIndex = 3
+                    
+                    let module = parts[moduleIndex]
+                    let address = parts[addressIndex]
+                    let symbolInfo = parts[symbolIndex...].joined(separator: " ")
+                    
+                    print("    \(index): \(module) - \(symbolInfo) [\(address)]")
+                } else {
+                    print("    \(index): \(symbol)")
+                }
+            }
+        }
+    }
+
 
 }

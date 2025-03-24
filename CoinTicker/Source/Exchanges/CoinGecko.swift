@@ -6,29 +6,32 @@ class CoinGecko: Exchange {
     
     private struct Constants {
         static let CoinsListAPIPath = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1"
-        static let PriceAPIPathFormat = "https://api.coingecko.com/api/v3/simple/price?ids=%@&vs_currencies=%@"
+        static let PriceAPIPathFormat = "https://api.coingecko.com/api/v3/simple/price?ids=%@&vs_currencies=%@&include_24hr_change=true"
     }
     
-    //添加存储市值信息的字典
-    private var marketCaps = [String: Double]()
-
+    // Add storage for price changes
+    public var priceChanges = [String: Double]()
+    public var marketCaps = [String: Double]()
+    
+    
     init(delegate: ExchangeDelegate? = nil) {
         super.init(site: .gateio, delegate: delegate)}
-
+    
     override func load() {
         // 从CoinGecko加载币种列表，默认按市值排序
         requestAPI(Constants.CoinsListAPIPath).map { [weak self] result in
             guard let self = self else { return }
             
-            // 清空现有市值数据
-            self.marketCaps.removeAll()// 解析API响应并提取市值数据 -拆分复杂表达式
+            // Clear existing market cap data
+            self.marketCaps.removeAll()
+            self.priceChanges.removeAll()
             let currencyPairs = self.processCoinGeckoResponse(result.json)
             
             // 排序逻辑
             let sortedPairs = self.sortCurrencyPairsByMarketCap(currencyPairs)
             
             // 调试输出
-            self.printTopCoins(sortedPairs)
+//            self.printTopCoins(sortedPairs)
             self.availableCurrencyPairs = sortedPairs
             // 处理选定的币种
             self.processSelectedCurrencyPairs()
@@ -50,11 +53,17 @@ class CoinGecko: Exchange {
             let symbol = data["symbol"].stringValue.uppercased()
             let marketCap = data["market_cap"].doubleValue
             let name = data["name"].stringValue
-            // 存储市值信息
-            self.marketCaps[id] = marketCap
-            print("Coin: \(symbol), ID: \(id),  Market Cap: \(marketCap)")
             
-            guard let base = Currency(customDisplayName: name, customSymbol: symbol) else  {
+            let priceChange = data["price_change_percentage_24h"].doubleValue
+            
+            // Store market cap and price change info
+            self.marketCaps[id] = marketCap
+            self.priceChanges[id] = priceChange
+            
+            // 存储市值信息
+            print("Coin: \(symbol), ID: \(id),  Market Cap: \(marketCap), priceChange: \(priceChange)")
+            
+            guard let base = Currency(customDisplayName: name, customSymbol: symbol) else {
                 return nil
             }
             
@@ -85,22 +94,22 @@ class CoinGecko: Exchange {
     
     // 处理已选择的币种对
     private func processSelectedCurrencyPairs() {
-        selectedCurrencyPairs = selectedCurrencyPairs.compactMap { currencyPair in
+        menuBarCurrencies = menuBarCurrencies.compactMap { currencyPair in
             if let newCurrencyPair = availableCurrencyPairs.first(where: { $0 == currencyPair }) {
                 return newCurrencyPair
             }
             // 其他匹配逻辑
             if (currencyPair.quoteCurrency.code == "USDT" || currencyPair.quoteCurrency.code == "USD"),let newCurrencyPair = availableCurrencyPairs.first(where: {
-                   $0.baseCurrency == currencyPair.baseCurrency &&
-                   ($0.quoteCurrency.code == "USD" || $0.quoteCurrency.code == "USDT")
-               }) {
+                $0.baseCurrency == currencyPair.baseCurrency &&
+                ($0.quoteCurrency.code == "USD" || $0.quoteCurrency.code == "USDT")
+            }) {
                 return newCurrencyPair
             }
             return nil
         }
         
         // 如果没有选择任何币种，选择默认币种 - 修复三元运算符错误
-        if selectedCurrencyPairs.count == 0 {
+        if menuBarCurrencies.count == 0 {
             let localCurrency = Currency(code: Locale.current.currencyCode)
             // 修复的逻辑：先尝试匹配本地货币，然后尝试USD，最后使用第一个可用的币种对
             let currencyPair: CurrencyPair?
@@ -113,28 +122,39 @@ class CoinGecko: Exchange {
             }
             
             if let currencyPair = currencyPair {
-                selectedCurrencyPairs.append(currencyPair)
+                menuBarCurrencies.append(currencyPair)
             }
         }
     }
     
     override internal func fetch() {
-        guard !selectedCurrencyPairs.isEmpty else { return }
         
-        let coinIDs = selectedCurrencyPairs.map { $0.customCode }.joined(separator: ",")
+        guard !TickerConfig.userDefaultsFetchCoingeckoCoinIds.isEmpty else { return }
         
-        let quoteCurrencies = Set(selectedCurrencyPairs.map { $0.quoteCurrency.code.lowercased() }).joined(separator: ",")
+        let coinIDs = TickerConfig.userDefaultsFetchCoingeckoCoinIds.joined(separator: ",")
+        
+        let quoteCurrencies = "usd"
         
         // 修复语句分隔符错误
         let apiPath = String(format: Constants.PriceAPIPathFormat, coinIDs, quoteCurrencies)
+        TrackingUtils.logWithStack(apiPath)
         
         requestAPI(apiPath).map { [weak self] result in
             guard let strongSelf = self else { return }
-            for currencyPair in strongSelf.selectedCurrencyPairs {
+            for currencyPair in strongSelf.menuBarCurrencies {
                 let coinID = currencyPair.customCode
                 let quoteCode = currencyPair.quoteCurrency.code.lowercased()
                 if let price = result.json[coinID][quoteCode].double {
                     strongSelf.setPrice(price, for: currencyPair)
+                }
+                
+                // Store 24h price change
+                let changeKey = "\(quoteCode)_24h_change"
+//                print("changeKey:\(changeKey), change:\(result.json[coinID][changeKey].double)")
+                if let priceChange = result.json[coinID][changeKey].double {
+                    print(coinID, ", printChange:", priceChange)
+                    
+                    strongSelf.priceChanges[coinID] = priceChange
                 }
             }
             
@@ -143,4 +163,9 @@ class CoinGecko: Exchange {
             print("Error fetching CoinGecko prices: \(error)")
         }
     }
+    
+    // Add method to get price change for a currency pair
+        func priceChange(for currencyPair: CurrencyPair) -> Double {
+            return priceChanges[currencyPair.customCode] ?? 0
+        }
 }

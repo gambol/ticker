@@ -3,7 +3,7 @@ import Foundation
 
 struct CurrencyPair: Comparable, Codable {
 
-    var baseCurrency: Currency
+var baseCurrency: Currency
     var quoteCurrency: Currency
     var customCode: String
     var marketCap: Double

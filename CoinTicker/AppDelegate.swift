@@ -146,7 +146,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // 如果是从视图控制器调用的，应用用户选择
         if let cryptoVC = sender as? CryptoSelectionViewController {
-            applySelectedCurrencies(cryptoVC.tempSelectedCurrencies)
+//            applySelectedCurrencies(cryptoVC.tempSelectedCurrencies)
         }
     }
 
@@ -157,8 +157,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
            closedPopover == cryptoSelectionPopover,
            let cryptoVC = closedPopover.contentViewController as? CryptoSelectionViewController {
             
-            // 应用用户选择
-            applySelectedCurrencies(cryptoVC.tempSelectedCurrencies)
+            TickerConfig.savePopoverSelection(cryptoVC.tempSelectedCurrencies)
+            TickerConfig.saveFetchCoinIds(cryptoVC.tempSelectedCoinGeckoIds)
+            updateMenuItems()
         }
     }
     
@@ -196,47 +197,48 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: UI Actions
     @IBAction private func onSelectExchangeSite(sender: AnyObject) {
-        if let menuItem = sender as? NSMenuItem, let exchangeSite = ExchangeSite(rawValue: menuItem.tag) {
-            if exchangeSite != currentExchange.site {
-                // End current exchange
-                currentExchange.stop()
-
-                // Deselect all exchange menu items and select this one
-                exchangeMenuItem.submenu?.items.forEach({ $0.state = .off })
-                menuItem.state = .on
-
-                // Remove all currency selections
-                currencyMenuItems.forEach({ mainMenu.removeItem($0) })
-                currencyMenuItems.removeAll()
-
-                // Start new exchange
-                let selectedCurrencyPairs = currentExchange.selectedCurrencyPairs
-                currentExchange = exchangeSite.exchange(delegate: self)
-                currentExchange.selectedCurrencyPairs = selectedCurrencyPairs
-                currentExchange.load()
-
-                // Save new data
-                TickerConfig.save(currentExchange)
-
-                // Track analytics
-                TrackingUtils.didSelectExchange(menuItem.title)
-            }
-        }
+//        if let menuItem = sender as? NSMenuItem, let exchangeSite = ExchangeSite(rawValue: menuItem.tag) {
+//            if exchangeSite != currentExchange.site {
+//                // End current exchange
+//                currentExchange.stop()
+//
+//                // Deselect all exchange menu items and select this one
+//                exchangeMenuItem.submenu?.items.forEach({ $0.state = .off })
+//                menuItem.state = .on
+//
+//                // Remove all currency selections
+//                currencyMenuItems.forEach({ mainMenu.removeItem($0) })
+//                currencyMenuItems.removeAll()
+//
+//                // Start new exchange
+//                let selectedCurrencyPairs = currentExchange.selectedCurrencyPairs
+//                currentExchange = exchangeSite.exchange(delegate: self)
+//                currentExchange.selectedCurrencyPairs = selectedCurrencyPairs
+//                currentExchange.load()
+//
+//                // Save new data
+//                TickerConfig.save(currentExchange)
+//
+//                // Track analytics
+//                TrackingUtils.didSelectExchange(menuItem.title)
+//            }
+//        }
     }
 
     @IBAction private func onSelectUpdateInterval(sender: AnyObject) {
-        if let menuItem = sender as? NSMenuItem {
-            // Reset exchange fetching
-            currentExchange.updateInterval = menuItem.tag
-            currentExchange.reset()
-
-            // Deselect all update interval menu items and select this one
-            updateIntervalMenuItem.submenu?.items.forEach({ $0.state = .off })
-            menuItem.state = .on
-
-            // Save new data
-            TickerConfig.save(currentExchange)
-        }
+        // 废弃
+//        if let menuItem = sender as? NSMenuItem {
+//            // Reset exchange fetching
+//            currentExchange.updateInterval = menuItem.tag
+//            currentExchange.reset()
+//
+//            // Deselect all update interval menu items and select this one
+//            updateIntervalMenuItem.submenu?.items.forEach({ $0.state = .off })
+//            menuItem.state = .on
+//
+//            // Save new data
+//            TickerConfig.save(currentExchange)
+//        }
     }
 
     @objc private func onSelectQuoteCurrency(sender: AnyObject) {
@@ -244,7 +246,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        if let baseCurrency = menuItem.parent?.representedObject as? Currency, let quoteCurrency = menuItem.representedObject as? Currency, currentExchange.selectedCurrencyPairs.count > 1 || currentExchange.selectedCurrencyPairs.first != CurrencyPair(baseCurrency: baseCurrency, quoteCurrency: quoteCurrency) {
+        if let baseCurrency = menuItem.parent?.representedObject as? Currency, let quoteCurrency = menuItem.representedObject as? Currency, currentExchange.statusBarCurrencyPairs.count > 1 || currentExchange.statusBarCurrencyPairs.first != CurrencyPair(baseCurrency: baseCurrency, quoteCurrency: quoteCurrency) {
             // Reset exchange fetching
             currentExchange.toggleCurrencyPair(baseCurrency: baseCurrency, quoteCurrency: quoteCurrency)
 
@@ -295,38 +297,173 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self.currencyMenuItems.removeAll()
 
             let indexOffset = self.mainMenu.index(of: self.currencyStartSeparator)
-            var menuMapping = [String: NSMenuItem]()
-            self.currentExchange.availableCurrencyPairs.forEach { currencyPair in
+            
+            // 获取从popover中选择的币种列表
+            let selectedFromPopover = TickerConfig.selectedCurrencyCodesFromPopover
+            
+            // 用于跟踪已添加的币种代码，防止重复
+            var addedCurrencyCodes = Set<String>()
+            
+            // 只为用户在popover中选择的币种创建菜单项
+            for currencyPair in self.currentExchange.availableCurrencyPairs {
                 let baseCurrency = currencyPair.baseCurrency
-                let quoteCurrency = currencyPair.quoteCurrency
-                if !baseCurrency.isPhysical {
-                    let menuItem: NSMenuItem
-                    if let savedMenuItem = menuMapping[baseCurrency.code] {
-                        menuItem = savedMenuItem
-                    } else {
-                        menuItem = self.menuItem(forBaseCurrency: baseCurrency)
-                        menuItem.state = (self.currentExchange.isCurrencyPairSelected(baseCurrency: baseCurrency) ? .on : .off)
-                        menuItem.submenu = NSMenu()
-                        menuMapping[baseCurrency.code] = menuItem
-                        self.currencyMenuItems.append(menuItem)
-                        self.mainMenu.insertItem(menuItem, at: menuMapping.count + indexOffset)
+                let code = currencyPair.baseCurrency.code
+                
+                // 跳过已添加的币种
+                if addedCurrencyCodes.contains(code) {
+                    continue
+                }
+                
+                // 只处理在popover中选择的币种
+                if selectedFromPopover.contains(code) {
+                    addedCurrencyCodes.insert(code)
+                    let quoteCurrency = currencyPair.quoteCurrency
+                    
+                    // 创建带复选框的菜单项
+                    let menuItem = NSMenuItem(title: "", action: #selector(self.onToggleCurrencyDisplay(_:)), keyEquivalent: "")
+                    menuItem.target = self
+                    
+                    // 根据是否选择在menubar中显示设置复选框状态
+                    let isSelected = self.currentExchange.isCurrencyPairSelected(baseCurrency: baseCurrency)
+                    menuItem.state = isSelected ? .on : .off
+                    
+                    // 获取价格并格式化
+                    let price = self.currentExchange.price(for: currencyPair)
+                    let priceString = self.stringForPrice(price, in: quoteCurrency)
+                    
+                    // 获取价格变化百分比
+                    var priceChangeText = ""
+                    var priceChangeColor = NSColor.textColor
+                    
+                    if let coinGecko = self.currentExchange as? CoinGecko {
+                        let priceChange = coinGecko.priceChange(for: currencyPair)
+                        let sign = priceChange >= 0 ? "+" : ""
+                        priceChangeText = "\(sign)\(String(format: "%.1f", priceChange))%"
+                        priceChangeColor = priceChange >= 0 ? NSColor.systemGreen : NSColor.systemRed
                     }
-
-                    let submenuItem = self.menuItem(forQuoteCurrency: quoteCurrency)
-                    submenuItem.state = (self.currentExchange.isCurrencyPairSelected(baseCurrency: baseCurrency, quoteCurrency: quoteCurrency) ? .on : .off)
-                    menuItem.submenu!.addItem(submenuItem)
+                    
+                    // 创建更美观的格式化菜单项
+                    let attributedString = self.createFormattedMenuTitle(
+                        code: currencyPair.baseCurrency.code,
+                        price: priceString,
+                        priceChange: priceChangeText,
+                        priceChangeColor: priceChangeColor
+                    )
+                    
+                    menuItem.attributedTitle = attributedString
+                    
+                    // 添加图标（如果有）
+                    let image = baseCurrency.smallIconImage ?? TickerConfig.SmallLogoImage
+                    image.isTemplate = true
+                    menuItem.image = image
+                    
+                    self.currencyMenuItems.append(menuItem)
+                    self.mainMenu.insertItem(menuItem, at: self.currencyMenuItems.count + indexOffset)
                 }
             }
 
-            self.updateMenuIcon()
+//            self.updateMenuIcon()
             self.updatePrices()
         }
     }
 
+    // 创建更美观的格式化菜单项标题
+    private func createFormattedMenuTitle(code: String, price: String, priceChange: String, priceChangeColor: NSColor) -> NSAttributedString {
+        // 使用单空间字体确保更好的对齐效果
+        let font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+        
+        // 计算每列的宽度
+        let codeWidth = 6  // 币种代码通常是3-4个字符
+        let priceWidth = 12 // 价格列宽度
+        
+        // 格式化代码和价格，确保固定宽度
+        let formattedCode = code.padding(toLength: codeWidth, withPad: " ", startingAt: 0)
+        
+        // 创建属性字符串
+        let attributedString = NSMutableAttributedString()
+        
+        // 添加代码部分
+        attributedString.append(NSAttributedString(
+            string: formattedCode,
+            attributes: [.font: font]
+        ))
+        
+        let formattedPrice = price.padding(toLength: priceWidth, withPad: " ", startingAt: 0)
+        // 添加价格部分
+        attributedString.append(NSAttributedString(
+            string: formattedPrice,
+            attributes: [.font: font]
+        ))
+        
+        // 添加固定宽度的空格分隔符
+        attributedString.append(NSAttributedString(
+            string: "  ",
+            attributes: [.font: font]
+        ))
+        
+        // 添加价格变化部分（带颜色）
+        attributedString.append(NSAttributedString(
+            string: priceChange,
+            attributes: [
+                .font: font,
+                .foregroundColor: priceChangeColor
+            ]
+        ))
+        
+        return attributedString
+    }
+
+
+    
+    // Add new method to toggle currency display in menubar
+    @objc private func onToggleCurrencyDisplay(_ sender: NSMenuItem) {
+        guard sender.tag >= 0 && sender.tag < currentExchange.availableCurrencyPairs.count else { return }
+        
+        let currencyPair = currentExchange.availableCurrencyPairs[sender.tag]
+        let baseCurrency = currencyPair.baseCurrency
+        let quoteCurrency = currencyPair.quoteCurrency
+        
+        // Toggle selection state
+        currentExchange.toggleCurrencyPair(baseCurrency: baseCurrency, quoteCurrency: quoteCurrency)
+        
+        // Update menu item state
+        sender.state = currentExchange.isCurrencyPairSelected(baseCurrency: baseCurrency) ? .on : .off
+        
+        // Save new data
+        TickerConfig.save(currentExchange)
+        
+        // Update prices display in menubar
+        updatePrices()
+        
+        // Update menu items and prices
+        updateMenuItems()
+    }
+
+    // Update the updatePrices method to only show selected currencies in menubar
+    fileprivate func updatePrices() {
+        DispatchQueue.main.async {
+            let priceStrings = self.currentExchange.statusBarCurrencyPairs.map { currencyPair -> String in
+                let price = self.currentExchange.price(for: currencyPair)
+                let priceString = self.stringForPrice(price, in: currencyPair.quoteCurrency)
+                
+                // If only showing one currency and icon is enabled, just show price
+                if self.currentExchange.isSingleBaseCurrencySelected && TickerConfig.showsIcon {
+                    return priceString
+                }
+                
+                // Otherwise show code and price
+                return "\(currencyPair.baseCurrency.code): \(priceString)"
+            }
+
+            self.statusItem.title = priceStrings.joined(separator: " • ")
+        }
+    }
+    
+
     private func updateMenuIcon() {
         if TickerConfig.showsIcon {
             let iconImage: NSImage
-            if self.currentExchange.isSingleBaseCurrencySelected, let image = self.currentExchange.selectedCurrencyPairs.first!.baseCurrency.iconImage {
+            if self.currentExchange.isSingleBaseCurrencySelected, let image = self.currentExchange.statusBarCurrencyPairs.first!.baseCurrency.iconImage {
                 iconImage = image
             } else {
                 iconImage = TickerConfig.LogoImage
@@ -384,21 +521,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return self.currencyFormatter.string(for: price)!
     }
 
-    fileprivate func updatePrices() {
-        DispatchQueue.main.async {
-            let priceStrings = self.currentExchange.selectedCurrencyPairs.map { currencyPair -> String in
-                let price = self.currentExchange.price(for: currencyPair)
-                let priceString = self.stringForPrice(price, in: currencyPair.quoteCurrency)
-                if self.currentExchange.isSingleBaseCurrencySelected && TickerConfig.showsIcon {
-                    return priceString
-                }
-
-                return "\(currencyPair.baseCurrency.code): \(priceString)"
-            }
-
-            self.statusItem.title = priceStrings.joined(separator: " • ")
-        }
-    }
+//    fileprivate func updatePrices() {
+//        DispatchQueue.main.async {
+//            let priceStrings = self.currentExchange.selectedCurrencyPairs.map { currencyPair -> String in
+//                let price = self.currentExchange.price(for: currencyPair)
+//                let priceString = self.stringForPrice(price, in: currencyPair.quoteCurrency)
+//                if self.currentExchange.isSingleBaseCurrencySelected && TickerConfig.showsIcon {
+//                    return priceString
+//                }
+//
+//                return "\(currencyPair.baseCurrency.code): \(priceString)"
+//            }
+//
+//            self.statusItem.title = priceStrings.joined(separator: " • ")
+//        }
+//    }
 
 }
 
@@ -410,29 +547,31 @@ extension AppDelegate: ExchangeDelegate {
 
     func exchangeDidUpdatePrices(_ exchange: Exchange) {
         updatePrices()
+        // Update menu items and prices
+        updateMenuItems()
     }
     
     func applySelectedCurrencies(_ selectedCurrencyCodes: Set<String>) {
-            // 清除当前所有选择
-            let currentSelected = currentExchange.selectedCurrencyPairs
-            for pair in currentSelected {
-                currentExchange.toggleCurrencyPair(baseCurrency: pair.baseCurrency, quoteCurrency: pair.quoteCurrency)
-            }
-            
-            // 应用新的选择
-            for code in selectedCurrencyCodes {
-                if let currencyPair = currentExchange.availableCurrencyPairs.first(where: { $0.baseCurrency.code == code }) {
-                    // 获取默认报价货币 (USD/USDT)
-                    let quoteCurrency = currencyPair.quoteCurrency
-                    currentExchange.toggleCurrencyPair(baseCurrency: currencyPair.baseCurrency, quoteCurrency: quoteCurrency)
-                }
-            }
-            
-            // 保存新数据
-            TickerConfig.save(currentExchange)
-            
-            // 更新菜单项和价格
-            updateMenuItems()
+        // Clear current selections
+        let currentSelected = currentExchange.statusBarCurrencyPairs
+        for pair in currentSelected {
+            currentExchange.toggleCurrencyPair(baseCurrency: pair.baseCurrency, quoteCurrency: pair.quoteCurrency)
         }
+        
+        // Apply new selections
+        for code in selectedCurrencyCodes {
+            if let currencyPair = currentExchange.availableCurrencyPairs.first(where: { $0.baseCurrency.code == code }) {
+                // Get default quote currency (USD/USDT)
+                let quoteCurrency = currencyPair.quoteCurrency
+                currentExchange.toggleCurrencyPair(baseCurrency: currencyPair.baseCurrency, quoteCurrency: quoteCurrency)
+            }
+        }
+        
+        // Save new data
+        TickerConfig.save(currentExchange)
+        
+        // Update menu items and prices
+        updateMenuItems()
+    }
 
 }

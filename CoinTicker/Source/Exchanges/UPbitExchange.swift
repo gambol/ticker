@@ -57,7 +57,7 @@ class UPbitExchange: Exchange {
     }
 
     override internal func fetch() {
-        let productIds: [String] = selectedCurrencyPairs.map({ $0.customCode })
+        let productIds: [String] = menuBarCurrencies.map({ $0.customCode })
         let apiPath = String(format: Constants.TickerAPIPathFormat, productIds.joined(separator: ","))
         requestAPI(apiPath).map { [weak self] result in
             result.json.arrayValue.forEach({ data in

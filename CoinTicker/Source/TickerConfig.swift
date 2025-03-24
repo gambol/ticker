@@ -9,10 +9,13 @@ class TickerConfig {
         static let UserDefaultsUpdateInterval = "userDefaults.updateInterval"
         static let UserDefaultsShowIcon = "userDefaults.showIcon"
         static let UserDefaultsSelectedCurrencyPairs = "userDefaults.selectedCurrencyPairs"
+        static let UserDefaultsPopoverCurrencyPairs = "userDefaults.selectedCurrencyCodesFromPopover"
+        
+        static let UserDefaultsFetchCoingeckoCoinIds = "userDefaults.userDefaultsFetchCoingeckoCoinIds"  // coingecko 的coinid和别的不一样
     }
 
     struct Constants {
-        static let RealTimeUpdateInterval: Int = 5
+        static let RealTimeUpdateInterval: Int = 15
     }
 
     static let LogoImage = NSImage(named: "CTLogo")!
@@ -22,7 +25,7 @@ class TickerConfig {
         let exchange = defaultExchangeSite.exchange()
         exchange.updateInterval = defaultUpdateInterval
         if let selectedCurrencyPairs = defaultSelectedCurrencyPairs {
-            exchange.selectedCurrencyPairs = selectedCurrencyPairs
+            exchange.menuBarCurrencies = selectedCurrencyPairs
         }
 
         return exchange
@@ -63,6 +66,45 @@ class TickerConfig {
             UserDefaults.standard.set(newValue, forKey: Keys.UserDefaultsShowIcon)
         }
     }
+    
+
+    
+    // 新增属性，用于存储popover中选择的币种
+       static var selectedCurrencyCodesFromPopover: Set<String> {
+           get {
+               if let storedCodes = UserDefaults.standard.array(forKey: Keys.UserDefaultsPopoverCurrencyPairs) as? [String] {
+                   return Set(storedCodes)
+               }
+               // 默认选择一些常见币种
+               return ["BTC"]
+           }
+           set {
+               UserDefaults.standard.set(Array(newValue), forKey: Keys.UserDefaultsPopoverCurrencyPairs)
+           }
+       }
+    
+    // 新增方法，用于保存popover中选择的币种
+    static func savePopoverSelection(_ selectedCodes: Set<String>) {
+        selectedCurrencyCodesFromPopover = selectedCodes
+    }
+
+    static var userDefaultsFetchCoingeckoCoinIds: Set<String> {
+        get {
+            if let storedCodes = UserDefaults.standard.array(forKey: Keys.UserDefaultsFetchCoingeckoCoinIds) as? [String] {
+                return Set(storedCodes)
+            }
+            // 默认选择一些常见币种
+            return ["BTC"]
+        }
+        set {
+            UserDefaults.standard.set(Array(newValue), forKey: Keys.UserDefaultsFetchCoingeckoCoinIds)
+        }
+    }
+    
+    // 新增方法，用于保存popover中选择的币种
+    static func saveFetchCoinIds(_ selectedCodes: Set<String>) {
+        userDefaultsFetchCoingeckoCoinIds = selectedCodes
+    }
 
     private static var defaultSelectedCurrencyPairs: [CurrencyPair]? {
         get {
@@ -89,7 +131,7 @@ class TickerConfig {
     static func save(_ defaultExchange: Exchange) {
         defaultExchangeSite = defaultExchange.site
         defaultUpdateInterval = defaultExchange.updateInterval
-        defaultSelectedCurrencyPairs = defaultExchange.selectedCurrencyPairs
+        defaultSelectedCurrencyPairs = defaultExchange.menuBarCurrencies
     }
 
 }

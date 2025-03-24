@@ -56,7 +56,7 @@ class HitBTCExchange: Exchange {
 
     override internal func fetch() {
         let apiPath: String
-        if selectedCurrencyPairs.count == 1, let currencyPair = selectedCurrencyPairs.first {
+        if menuBarCurrencies.count == 1, let currencyPair = menuBarCurrencies.first {
             apiPath = String(format: Constants.SingleTickerAPIPathFormat, currencyPair.customCode)
         } else {
             apiPath = Constants.FullTickerAPIPath
@@ -87,7 +87,7 @@ class HitBTCExchange: Exchange {
             socket.onEvent = { [weak self] event in
                 switch event {
                 case .connected(_):
-                    self?.selectedCurrencyPairs.forEach({ currencyPair in
+                    self?.menuBarCurrencies.forEach({ currencyPair in
                         let json = JSON([
                             "method": "subscribeTicker",
                             "params": [

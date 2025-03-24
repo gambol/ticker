@@ -77,7 +77,9 @@ class Exchange {
     private var requestTimer: Timer?
     var updateInterval = TickerConfig.defaultUpdateInterval
     var availableCurrencyPairs = [CurrencyPair]()
-    var selectedCurrencyPairs = [CurrencyPair]()
+    var statusBarCurrencyPairs = [CurrencyPair]() // 展示在statusBar上的币
+    var menuCurrencyPairs = [CurrencyPair]()  // 展示在menu上的币
+    
     private var currencyPrices = [String: Double]()
 
     private lazy var apiResponseQueue: DispatchQueue = { [unowned self] in
@@ -94,7 +96,7 @@ class Exchange {
     }
 
     var isSingleBaseCurrencySelected: Bool {
-        return (Set(selectedCurrencyPairs.map({ $0.baseCurrency })).count == 1)
+        return (Set(statusBarCurrencyPairs.map({ $0.baseCurrency })).count == 1)
     }
 
     // MARK: Initialization
@@ -113,15 +115,15 @@ class Exchange {
             return
         }
 
-        if let index = selectedCurrencyPairs.firstIndex(of: currencyPair) {
-            if selectedCurrencyPairs.count > 0 {
-                selectedCurrencyPairs.remove(at: index)
+        if let index = statusBarCurrencyPairs.firstIndex(of: currencyPair) {
+            if statusBarCurrencyPairs.count > 0 {
+                statusBarCurrencyPairs.remove(at: index)
                 reset()
                 TrackingUtils.didDeselectCurrencyPair(currencyPair)
             }
-        } else if selectedCurrencyPairs.count < 5 {
-            selectedCurrencyPairs.append(currencyPair)
-            selectedCurrencyPairs = selectedCurrencyPairs.sorted()
+        } else if statusBarCurrencyPairs.count < 5 {
+            statusBarCurrencyPairs.append(currencyPair)
+            statusBarCurrencyPairs = statusBarCurrencyPairs.sorted()
             reset()
             TrackingUtils.didSelectCurrencyPair(currencyPair)
         }
@@ -129,14 +131,14 @@ class Exchange {
 
     func isCurrencyPairSelected(baseCurrency: Currency, quoteCurrency: Currency? = nil) -> Bool {
         if let quoteCurrency = quoteCurrency {
-            return selectedCurrencyPairs.contains(where: { $0.baseCurrency == baseCurrency && $0.quoteCurrency == quoteCurrency })
+            return statusBarCurrencyPairs.contains(where: { $0.baseCurrency == baseCurrency && $0.quoteCurrency == quoteCurrency })
         }
 
-        return selectedCurrencyPairs.contains(where: { $0.baseCurrency == baseCurrency })
+        return statusBarCurrencyPairs.contains(where: { $0.baseCurrency == baseCurrency })
     }
 
-    func selectedCurrencyPair(withCustomCode customCode: String) -> CurrencyPair? {
-        return selectedCurrencyPairs.first(where: { $0.customCode == customCode })
+    func statusBarCurrencyPairs(withCustomCode customCode: String) -> CurrencyPair? {
+        return statusBarCurrencyPairs.first(where: { $0.customCode == customCode })
     }
 
     internal func setPrice(_ price: Double, for currencyPair: CurrencyPair) {
@@ -162,7 +164,7 @@ class Exchange {
 
     internal func setAvailableCurrencyPairs(_ availableCurrencyPairs: [CurrencyPair]) {
         self.availableCurrencyPairs = availableCurrencyPairs.sorted()
-        selectedCurrencyPairs = selectedCurrencyPairs.compactMap { currencyPair in
+        statusBarCurrencyPairs = statusBarCurrencyPairs.compactMap { currencyPair in
             if let newCurrencyPair = self.availableCurrencyPairs.first(where: { $0 == currencyPair }) {
                 return newCurrencyPair
             }
@@ -175,13 +177,13 @@ class Exchange {
             return nil
         }
 
-        if selectedCurrencyPairs.count == 0 {
+        if statusBarCurrencyPairs.count == 0 {
             let localCurrency = Currency(code: Locale.current.currencyCode)
             if let currencyPair = self.availableCurrencyPairs.first(where: { $0.quoteCurrency == localCurrency }) ??
                 self.availableCurrencyPairs.first(where: { $0.quoteCurrency.code == "USD" }) ??
                 self.availableCurrencyPairs.first(where: { $0.quoteCurrency.code == "USDT" }) ??
                 self.availableCurrencyPairs.first {
-                selectedCurrencyPairs.append(currencyPair)
+                statusBarCurrencyPairs.append(currencyPair)
             }
         }
 
@@ -208,6 +210,7 @@ class Exchange {
     }
 
     private func startRequestTimer() {
+        print("startRequestTimer")
         DispatchQueue.main.async {
             self.requestTimer = Timer.scheduledTimer(timeInterval: Double(self.updateInterval),
                                                      target: self,

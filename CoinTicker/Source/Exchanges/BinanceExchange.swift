@@ -55,7 +55,7 @@ class BinanceExchange: Exchange {
 
     override internal func fetch() {
         let apiPath: String
-        if selectedCurrencyPairs.count == 1, let currencyPair = selectedCurrencyPairs.first {
+        if menuBarCurrencies.count == 1, let currencyPair = menuBarCurrencies.first {
             apiPath = String(format: Constants.SingleTickerAPIPathFormat, currencyPair.customCode)
         } else {
             apiPath = Constants.FullTickerAPIPath
@@ -81,7 +81,7 @@ class BinanceExchange: Exchange {
         }
 
         if isUpdatingInRealTime {
-            let currencyPairCodes: [String] = selectedCurrencyPairs.map({ "\($0.customCode.lowercased())@ticker" })
+            let currencyPairCodes: [String] = menuBarCurrencies.map({ "\($0.customCode.lowercased())@ticker" })
             let socket = WebSocket(request: URLRequest(url: URL(string: String(format: Constants.WebSocketPathFormat, currencyPairCodes.joined(separator: "/")))!))
 
             socket.onEvent = { [weak self] event in

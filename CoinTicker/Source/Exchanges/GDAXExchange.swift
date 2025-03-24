@@ -79,7 +79,7 @@ class GDAXExchange: Exchange {
             let socket = WebSocket(request: URLRequest(url: Constants.WebSocketURL))
             socket.callbackQueue = socketResponseQueue
 
-            let productIds: [String] = selectedCurrencyPairs.map({ $0.customCode })
+            let productIds: [String] = menuBarCurrencies.map({ $0.customCode })
             socket.onEvent = { [weak self] event in
                 switch event {
                 case .connected(_):
@@ -110,7 +110,7 @@ class GDAXExchange: Exchange {
             socket.connect()
             self.socket = socket
         } else {
-            _ = when(resolved: selectedCurrencyPairs.map({ currencyPair -> Promise<ExchangeAPIResponse> in
+            _ = when(resolved: menuBarCurrencies.map({ currencyPair -> Promise<ExchangeAPIResponse> in
                 let apiRequestPath = String(format: Constants.TickerAPIPathFormat, currencyPair.customCode)
                 return requestAPI(apiRequestPath, for: currencyPair)
             })).map { [weak self] results in

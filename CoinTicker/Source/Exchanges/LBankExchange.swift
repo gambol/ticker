@@ -62,8 +62,8 @@ class LBankExchange: Exchange {
 
     override internal func fetch() {
         let apiPath: String
-        let isSingleTicker = (selectedCurrencyPairs.count == 1)
-        if isSingleTicker, let currencyPair = selectedCurrencyPairs.first {
+        let isSingleTicker = (menuBarCurrencies.count == 1)
+        if isSingleTicker, let currencyPair = menuBarCurrencies.first {
             apiPath = String(format: Constants.SingleTickerAPIPathFormat, currencyPair.customCode)
         } else {
             apiPath = Constants.FullTickerAPIPath
@@ -73,7 +73,7 @@ class LBankExchange: Exchange {
             if let strongSelf = self {
                 let results = result.json.array ?? [result.json]
                 results.forEach({ result in
-                    if let currencyPair = (isSingleTicker ? strongSelf.selectedCurrencyPairs.first : strongSelf.selectedCurrencyPair(withCustomCode: result["symbol"].stringValue)) {
+                    if let currencyPair = (isSingleTicker ? strongSelf.menuBarCurrencies.first : strongSelf.selectedCurrencyPair(withCustomCode: result["symbol"].stringValue)) {
                         strongSelf.setPrice(result["ticker"]["latest"].doubleValue, for: currencyPair)
                     }
                 })

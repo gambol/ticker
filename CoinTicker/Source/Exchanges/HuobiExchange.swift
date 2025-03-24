@@ -54,7 +54,7 @@ class HuobiExchange: Exchange {
     }
 
     override internal func fetch() {
-        _ = when(resolved: selectedCurrencyPairs.map({ currencyPair -> Promise<ExchangeAPIResponse> in
+        _ = when(resolved: menuBarCurrencies.map({ currencyPair -> Promise<ExchangeAPIResponse> in
             let apiRequestPath = String(format: Constants.TickerAPIPathFormat, currencyPair.customCode)
             return requestAPI(apiRequestPath, for: currencyPair)
         })).map { [weak self] results in
