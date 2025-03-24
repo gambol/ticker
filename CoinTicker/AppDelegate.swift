@@ -47,7 +47,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     public var currentExchange: Exchange!
     
-    private var cryptoSelectionPopover: NSPopover?
+    public var cryptoSelectionPopover: NSPopover?
     private var eventMonitor: Any?
 
     // MARK: NSApplicationDelegate
@@ -134,6 +134,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                                                       name: NSPopover.didCloseNotification,
                                                       object: nil)
                 
+                
                 print("✓ 新popover已创建")
             }// 设置内容视图控制器
             cryptoSelectionPopover?.contentViewController = cryptoSelectionVC
@@ -162,6 +163,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
     }
+    
+    func closeCryptoSelectionPopover(_ sender: Any) {
+        // 关闭弹窗
+        cryptoSelectionPopover?.close()
+        
+        // 如果是从视图控制器调用的，应用用户选择
+        if let cryptoVC = sender as? CryptoSelectionViewController {
+            applySelectedCurrencies(cryptoVC.tempSelectedCurrencies)
+        }
+    }
+
     
     @objc func popoverDidClose(_ notification: Notification) {
         // 确保是我们的 popover

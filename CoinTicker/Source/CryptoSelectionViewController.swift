@@ -16,6 +16,9 @@ class CryptoSelectionViewController: NSViewController {
     @IBOutlet weak var tableView: NSTableView!
     @IBOutlet weak var scrollView: NSScrollView!
     
+    // 添加 Done 按钮的 outlet
+    @IBOutlet weak var doneButton: NSButton!
+    
     weak var appDelegate: AppDelegate?
     
     private var allCurrencyPairs = [CurrencyPair]()
@@ -84,15 +87,44 @@ class CryptoSelectionViewController: NSViewController {
             default: break
             }
         }
+        
+        // 如果没有使用 Interface Builder 添加按钮，可以在代码中创建
+              if doneButton == nil {
+                  setupDoneButton()
+              }
+        
 
         // 设置弹窗大小
-        preferredContentSize = NSSize(width: 400, height: 400)
+        preferredContentSize = NSSize(width: 400, height: 430)
           print("CryptoSelectionViewController的视图已加载")
           // 检查表格视图是否正确连接
           print("tableView存在: \(tableView != nil)")
         
         
     }
+    
+    private func setupDoneButton() {
+           // 创建 Done 按钮
+           let button = NSButton(title: "Done", target: self, action: #selector(doneButtonClicked(_:)))
+           button.bezelStyle = .rounded
+           button.translatesAutoresizingMaskIntoConstraints = false
+           
+           // 添加按钮到视图
+           view.addSubview(button)
+           
+           // 设置按钮约束 - 放在表格视图下方居中
+           NSLayoutConstraint.activate([
+               button.topAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: 10),
+               button.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+               button.widthAnchor.constraint(equalToConstant: 100),
+               button.heightAnchor.constraint(equalToConstant: 30),
+               // 确保按钮和底部之间有足够的间距
+               view.bottomAnchor.constraint(equalTo: button.bottomAnchor, constant: 10)
+           ])
+           
+           // 保存引用
+           doneButton = button
+       }
     
     @objc func searchTextChanged(_ notification: Notification) {
         updateFilteredCurrencies()
@@ -102,6 +134,16 @@ class CryptoSelectionViewController: NSViewController {
         updateFilteredCurrencies()
     }
     
+    // 添加 Done 按钮点击处理方法
+      @objc func doneButtonClicked(_ sender: NSButton) {
+          // 直接通过 AppDelegate 关闭弹窗
+             if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
+                 appDelegate.cryptoSelectionPopover?.close()
+                 
+                 // 应用用户选择
+                 appDelegate.applySelectedCurrencies(tempSelectedCurrencies)
+             }
+      }
     
     override func viewWillAppear() {
         super.viewWillAppear()
