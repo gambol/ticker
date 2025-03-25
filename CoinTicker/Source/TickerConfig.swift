@@ -9,9 +9,9 @@ class TickerConfig {
         static let UserDefaultsUpdateInterval = "userDefaults.updateInterval"
         static let UserDefaultsShowIcon = "userDefaults.showIcon"
         static let UserDefaultsSelectedCurrencyPairs = "userDefaults.selectedCurrencyPairs"
-        static let UserDefaultsPopoverCurrencyPairs = "userDefaults.selectedCurrencyCodesFromPopover"
+        static let UserDefaultsMenuCurrencyPairs = "userDefaults.menuCurrencyPairs"
         
-        static let UserDefaultsFetchCoingeckoCoinIds = "userDefaults.userDefaultsFetchCoingeckoCoinIds"  // coingecko 的coinid和别的不一样
+        static let UserDefaultsPopoverCurrencyPairs = "userDefaults.selectedCurrencyCodesFromPopover"
     }
 
     struct Constants {
@@ -26,6 +26,10 @@ class TickerConfig {
         exchange.updateInterval = defaultUpdateInterval
         if let selectedCurrencyPairs = defaultSelectedCurrencyPairs {
             exchange.statusBarCurrencyPairs = selectedCurrencyPairs
+        }
+        
+        if let menuCurrencyPairs = defaultMenuCurrencyPairs {
+            exchange.menuCurrencyPairs = menuCurrencyPairs
         }
 
         return exchange
@@ -68,7 +72,6 @@ class TickerConfig {
     }
     
 
-    
     // 新增属性，用于存储popover中选择的币种
        static var selectedCurrencyCodesFromPopover: Set<String> {
            get {
@@ -76,7 +79,7 @@ class TickerConfig {
                    return Set(storedCodes)
                }
                // 默认选择一些常见币种
-               return ["BTC"]
+               return []
            }
            set {
                UserDefaults.standard.set(Array(newValue), forKey: Keys.UserDefaultsPopoverCurrencyPairs)
@@ -88,23 +91,6 @@ class TickerConfig {
         selectedCurrencyCodesFromPopover = selectedCodes
     }
 
-    static var userDefaultsFetchCoingeckoCoinIds: Set<String> {
-        get {
-            if let storedCodes = UserDefaults.standard.array(forKey: Keys.UserDefaultsFetchCoingeckoCoinIds) as? [String] {
-                return Set(storedCodes)
-            }
-            // 默认选择一些常见币种
-            return ["BTC"]
-        }
-        set {
-            UserDefaults.standard.set(Array(newValue), forKey: Keys.UserDefaultsFetchCoingeckoCoinIds)
-        }
-    }
-    
-    // 新增方法，用于保存popover中选择的币种
-    static func saveFetchCoinIds(_ selectedCodes: Set<String>) {
-        userDefaultsFetchCoingeckoCoinIds = selectedCodes
-    }
 
     private static var defaultSelectedCurrencyPairs: [CurrencyPair]? {
         get {
@@ -128,10 +114,33 @@ class TickerConfig {
         }
     }
 
+    private static var defaultMenuCurrencyPairs: [CurrencyPair]? {
+        get {
+            if let data = UserDefaults.standard.object(forKey: Keys.UserDefaultsMenuCurrencyPairs) as? Data {
+                do {
+                    return try JSONDecoder().decode([CurrencyPair].self, from: data)
+                } catch {
+                    print("Error reading from UserDefaults: \(error)")
+                }
+            }
+
+            return []
+        }
+
+        set {
+            do {
+                UserDefaults.standard.set(try JSONEncoder().encode(newValue), forKey: Keys.UserDefaultsMenuCurrencyPairs)
+            } catch {
+                print("Error saving to UserDefaults: \(error)")
+            }
+        }
+    }
+    
     static func save(_ defaultExchange: Exchange) {
         defaultExchangeSite = defaultExchange.site
         defaultUpdateInterval = defaultExchange.updateInterval
         defaultSelectedCurrencyPairs = defaultExchange.statusBarCurrencyPairs
+        defaultMenuCurrencyPairs = defaultExchange.menuCurrencyPairs
 //        selectedCurrencyCodesFromPopover = defaultExchange.menuCurrencyPairs
     }
 

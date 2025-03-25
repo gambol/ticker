@@ -78,30 +78,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // 显示币种选择弹窗
     @IBAction func showCryptoSelectionPopover(_ sender: NSMenuItem) {
 
-        print("➡️ 准备显示加密货币选择弹窗")
-           // 调试已有popover状态
-           if let existingPopover = cryptoSelectionPopover {
-               print("已有popover对象: \(existingPopover), 是否已显示: \(existingPopover.isShown)")
-           } else {
-               print("popover对象为nil，将创建新的")
-           }
-           
-           // 创建视图控制器前后添加日志
-           print("开始创建内容视图控制器")
-        
         let storyboard = NSStoryboard(name: "Main", bundle: nil)
 
         if let cryptoSelectionVC = storyboard.instantiateController(withIdentifier: "CryptoSelectionViewController") as? CryptoSelectionViewController {
             
-            //           let cryptoSelectionVC = CryptoSelectionViewController(nibName: "CryptoSelectionViewController", bundle: nil)
-            print("✓ 内容视图控制器已创建: \(cryptoSelectionVC)")// 测试NIB文件是否能正确加载
-            print("尝试加载视图")
             let viewLoaded = cryptoSelectionVC.view != nil
-            print(viewLoaded ? "✓ 视图已成功加载" : "✗ 视图加载失败")
+
             
             // Popover创建与配置
             if cryptoSelectionPopover == nil {
-                print("创建新的popover")
+
                 cryptoSelectionPopover = NSPopover()
                 cryptoSelectionPopover?.behavior = .transient
                 // 添加关闭通知监听
@@ -111,13 +97,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                                                       object: nil)
                 
                 
-                print("✓ 新popover已创建")
+//                print("✓ 新popover已创建")
             }// 设置内容视图控制器
             cryptoSelectionPopover?.contentViewController = cryptoSelectionVC
-            print("✓ 已设置内容视图控制器")
-            
-            // 显示popover前检查
-            print("准备显示popover")
             
             
             //           print("发送者: \(sender), 边界: \(sender.bounds),窗口: \(String(describing: sender.window))")// 显示popover
@@ -125,16 +107,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 if let popover = cryptoSelectionPopover {
                     popover.show(relativeTo: statusBarButton.bounds, of: statusBarButton, preferredEdge: .minY)
                     
-                    print("✓ 已调用popover.show方法")
+//                    print("✓ 已调用popover.show方法")
                     
                     // 显示后检查
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        print("Popover是否显示: \(popover.isShown)")
-                    }
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+////                        print("Popover是否显示: \(popover.isShown)")
+//                    }
                 }
             }
             
-            print("Popover尺寸: \(cryptoSelectionPopover?.contentSize ?? .zero)")
+//            print("Popover尺寸: \(cryptoSelectionPopover?.contentSize ?? .zero)")
             
         }
 
@@ -323,6 +305,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     // 创建带复选框的菜单项
                     let menuItem = NSMenuItem(title: "", action: #selector(self.onToggleCurrencyDisplay(_:)), keyEquivalent: "")
                     menuItem.target = self
+                    // 使用 representedObject 存储货币对信息
+                    menuItem.representedObject = currencyPair
                     
                     // 根据是否选择在menubar中显示设置复选框状态
                     let isSelected = self.currentExchange.isCurrencyPairSelected(baseCurrency: baseCurrency)
@@ -418,9 +402,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     // Add new method to toggle currency display in menubar
     @objc private func onToggleCurrencyDisplay(_ sender: NSMenuItem) {
-        guard sender.tag >= 0 && sender.tag < currentExchange.availableCurrencyPairs.count else { return }
+        guard let currencyPair = sender.representedObject as? CurrencyPair else { return }
         
-        let currencyPair = currentExchange.availableCurrencyPairs[sender.tag]
         let baseCurrency = currencyPair.baseCurrency
         let quoteCurrency = currencyPair.quoteCurrency
         
@@ -456,10 +439,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 return "\(currencyPair.baseCurrency.code): \(priceString)"
             }
 
-            let title = priceStrings.joined(separator: " • ")
+            let title = priceStrings.joined(separator: " ")
+            if title.isEmpty {
+                let image = TickerConfig.LogoImage
+                image.isTemplate = true
+                self.statusItem.image = image
                 
+            }
+            self.statusItem.title = title
+            
                 // 添加判断，如果title长度为0，则显示"TICK"
-            self.statusItem.title = title.isEmpty ? "TICK" : title
         }
     }
     
@@ -520,6 +509,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             numFractionDigits = 0
         }
 
+        self.currencyFormatter.currencySymbol = "$"
+        
         self.currencyFormatter.minimumFractionDigits = numFractionDigits
         self.currencyFormatter.maximumFractionDigits = numFractionDigits
         return self.currencyFormatter.string(for: price)!
@@ -592,6 +583,9 @@ extension AppDelegate: ExchangeDelegate {
         updateMenuItems()
         
         updatePrices()
+        
+        // Save new data
+        TickerConfig.save(currentExchange)
     }
 
 }
