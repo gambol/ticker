@@ -16,6 +16,7 @@ class TickerConfig {
 
     struct Constants {
         static let RealTimeUpdateInterval: Int = 15
+        static let StatusBarFontSize: CGFloat = 12
     }
 
     static let LogoImage = NSImage(named: "CTLogo")!

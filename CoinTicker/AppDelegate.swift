@@ -338,9 +338,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     menuItem.attributedTitle = attributedString
                     
                     // 添加图标（如果有）
-                    let image = baseCurrency.smallIconImage ?? TickerConfig.SmallLogoImage
-                    image.isTemplate = true
-                    menuItem.image = image
+//                    let image = baseCurrency.smallIconImage ?? TickerConfig.SmallLogoImage
+//                    image.isTemplate = true
+//                    menuItem.image = image
                     
                     self.currencyMenuItems.append(menuItem)
                     self.mainMenu.insertItem(menuItem, at: self.currencyMenuItems.count + indexOffset)
@@ -426,30 +426,63 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // Update the updatePrices method to only show selected currencies in menubar
     fileprivate func updatePrices() {
         DispatchQueue.main.async {
-            let priceStrings = self.currentExchange.statusBarCurrencyPairs.map { currencyPair -> String in
-                let price = self.currentExchange.price(for: currencyPair)
-                let priceString = self.stringForPrice(price, in: currencyPair.quoteCurrency)
-                
-                // If only showing one currency and icon is enabled, just show price
-                if self.currentExchange.isSingleBaseCurrencySelected && TickerConfig.showsIcon {
-                    return priceString
-                }
-                
-                // Otherwise show code and price
-                return "\(currencyPair.baseCurrency.code): \(priceString)"
-            }
+               // 如果没有选中任何货币，显示图标并返回
+               if self.currentExchange.statusBarCurrencyPairs.isEmpty {
+                   let image = TickerConfig.LogoImage
+                   image.isTemplate = true
+                   self.statusItem.image = image
+                   self.statusItem.attributedTitle = nil
+                   return
+               }
+               
+               // 创建一个属性字符串数组
+               let priceAttributedStrings = self.currentExchange.statusBarCurrencyPairs.map { currencyPair -> NSAttributedString in
+                   let price = self.currentExchange.price(for: currencyPair)
+                   let priceString = self.stringForPrice(price, in: currencyPair.quoteCurrency)
+                   
+                   // 如果只显示一种货币且启用了图标，只显示价格
+                   let displayText: String
+                   if self.currentExchange.isSingleBaseCurrencySelected && TickerConfig.showsIcon {
+                       displayText = priceString
+                   } else {
+                       // 否则显示代码和价格
+                       displayText = "\(currencyPair.baseCurrency.code)\(priceString)"
+                   }
+                   
+                   // 创建属性字符串，使用较小的字体
+                   let attributes: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.systemFont(ofSize: TickerConfig.Constants.StatusBarFontSize) // 这里设置字体大小，可以根据需要调整
+                   ]
+                   
+                   return NSAttributedString(string: displayText, attributes: attributes)
+               }
+               
+               // 合并属性字符串
+               if priceAttributedStrings.isEmpty {
+                   self.statusItem.attributedTitle = nil
+               } else {
+                   let finalAttributedString = NSMutableAttributedString()
+                   
+                   for (index, attrString) in priceAttributedStrings.enumerated() {
+                       if index > 0 {
+                           // 添加分隔符
+                           let separator = NSAttributedString(
+                               string: " ",
+                               attributes: [.font: NSFont.systemFont(ofSize: TickerConfig.Constants.StatusBarFontSize)]
+                           )
+                           finalAttributedString.append(separator)
+                       }
+                       
+                       finalAttributedString.append(attrString)
+                   }
+                   
+                   // 设置状态栏项目的属性标题
+                   self.statusItem.title = nil // 清除普通标题
+                   self.statusItem.attributedTitle = finalAttributedString
+                   self.statusItem.image = nil
 
-            let title = priceStrings.joined(separator: " ")
-            if title.isEmpty {
-                let image = TickerConfig.LogoImage
-                image.isTemplate = true
-                self.statusItem.image = image
-                
-            }
-            self.statusItem.title = title
-            
-                // 添加判断，如果title长度为0，则显示"TICK"
-        }
+               }
+           }
     }
     
 
