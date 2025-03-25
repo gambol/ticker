@@ -25,7 +25,7 @@ class TickerConfig {
         let exchange = defaultExchangeSite.exchange()
         exchange.updateInterval = defaultUpdateInterval
         if let selectedCurrencyPairs = defaultSelectedCurrencyPairs {
-            exchange.menuBarCurrencies = selectedCurrencyPairs
+            exchange.statusBarCurrencyPairs = selectedCurrencyPairs
         }
 
         return exchange
@@ -131,7 +131,8 @@ class TickerConfig {
     static func save(_ defaultExchange: Exchange) {
         defaultExchangeSite = defaultExchange.site
         defaultUpdateInterval = defaultExchange.updateInterval
-        defaultSelectedCurrencyPairs = defaultExchange.menuBarCurrencies
+        defaultSelectedCurrencyPairs = defaultExchange.statusBarCurrencyPairs
+//        selectedCurrencyCodesFromPopover = defaultExchange.menuCurrencyPairs
     }
 
 }

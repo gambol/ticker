@@ -32,31 +32,32 @@ enum ExchangeSite: Int, Codable {
     case zb = 400
 
     func exchange(delegate: ExchangeDelegate? = nil) -> Exchange {
-        switch self {
-        case .bibox: return BiboxExchange(delegate: delegate)
-        case .binance: return BinanceExchange(delegate: delegate)
-        case .bitfinex: return BitfinexExchange(delegate: delegate)
-        case .bithumb: return BithumbExchange(delegate: delegate)
-        case .bitstamp: return BitstampExchange(delegate: delegate)
-        case .bittrex: return BittrexExchange(delegate: delegate)
-        case .bitz: return BitZExchange(delegate: delegate)
-        case .btcturk: return BTCTurkExchange(delegate: delegate)
-        case .coincheck: return CoincheckExchange(delegate: delegate)
-        case .coinone: return CoinoneExchange(delegate: delegate)
-        case .gateio: return CoinGecko(delegate: delegate)
-        case .gdax: return GDAXExchange(delegate: delegate)
-        case .hitbtc: return HitBTCExchange(delegate: delegate)
-        case .huobi: return HuobiExchange(delegate: delegate)
-        case .korbit: return KorbitExchange(delegate: delegate)
-        case .kraken: return KrakenExchange(delegate: delegate)
-        case .kucoin: return KuCoinExchange(delegate: delegate)
-        case .lbank: return LBankExchange(delegate: delegate)
-        case .okex: return OKExExchange(delegate: delegate)
-        case .paribu: return ParibuExchange(delegate: delegate)
-        case .poloniex: return PoloniexExchange(delegate: delegate)
-        case .upbit: return UPbitExchange(delegate: delegate)
-        case .zb: return ZBExchange(delegate: delegate)
-        }
+        return CoinGecko(delegate: delegate)
+//        switch self {
+//        case .bibox: return BiboxExchange(delegate: delegate)
+//        case .binance: return BinanceExchange(delegate: delegate)
+//        case .bitfinex: return BitfinexExchange(delegate: delegate)
+//        case .bithumb: return BithumbExchange(delegate: delegate)
+//        case .bitstamp: return BitstampExchange(delegate: delegate)
+//        case .bittrex: return BittrexExchange(delegate: delegate)
+//        case .bitz: return BitZExchange(delegate: delegate)
+//        case .btcturk: return BTCTurkExchange(delegate: delegate)
+//        case .coincheck: return CoincheckExchange(delegate: delegate)
+//        case .coinone: return CoinoneExchange(delegate: delegate)
+//        case .gateio: return CoinGecko(delegate: delegate)
+//        case .gdax: return GDAXExchange(delegate: delegate)
+//        case .hitbtc: return HitBTCExchange(delegate: delegate)
+//        case .huobi: return HuobiExchange(delegate: delegate)
+//        case .korbit: return KorbitExchange(delegate: delegate)
+//        case .kraken: return KrakenExchange(delegate: delegate)
+//        case .kucoin: return KuCoinExchange(delegate: delegate)
+//        case .lbank: return LBankExchange(delegate: delegate)
+//        case .okex: return OKExExchange(delegate: delegate)
+//        case .paribu: return ParibuExchange(delegate: delegate)
+//        case .poloniex: return PoloniexExchange(delegate: delegate)
+//        case .upbit: return UPbitExchange(delegate: delegate)
+//        case .zb: return ZBExchange(delegate: delegate)
+//        }
     }
 }
 
@@ -109,8 +110,11 @@ class Exchange {
         self.delegate = delegate
     }
 
+    
+    
+    
     // MARK: Currency Helpers
-    func toggleCurrencyPair(baseCurrency: Currency, quoteCurrency: Currency) {
+    func toggleStatusBarCurrencyPair(baseCurrency: Currency, quoteCurrency: Currency) {
         guard let currencyPair = availableCurrencyPairs.first(where: { $0.baseCurrency == baseCurrency && $0.quoteCurrency == quoteCurrency }) else {
             return
         }
@@ -121,13 +125,37 @@ class Exchange {
                 reset()
                 TrackingUtils.didDeselectCurrencyPair(currencyPair)
             }
-        } else if statusBarCurrencyPairs.count < 5 {
+        } else if statusBarCurrencyPairs.count < 10 {
             statusBarCurrencyPairs.append(currencyPair)
             statusBarCurrencyPairs = statusBarCurrencyPairs.sorted()
             reset()
             TrackingUtils.didSelectCurrencyPair(currencyPair)
         }
     }
+    
+    // MARK: Currency Helpers
+    func saveAllMenuCurrencyPair(_ selectedCurrencyCodes: Set<String>) {
+        menuCurrencyPairs.removeAll()
+        
+        for code in selectedCurrencyCodes {
+            if let currencyPair = availableCurrencyPairs.first(where: { $0.baseCurrency.code == code }) {
+                // Get default quote currency (USD/USDT)
+//                let quoteCurrency = currencyPair.quoteCurrency
+                menuCurrencyPairs.append(currencyPair)
+            }
+        }
+        
+        menuCurrencyPairs = menuCurrencyPairs.sorted()
+        
+        // 添加判断，移除在menuCurrencyPairs不存在但在statusBarCurrencyPairs存在的pair
+         statusBarCurrencyPairs.removeAll { pair in
+             !menuCurrencyPairs.contains(pair)
+         }
+        
+        reset()
+        
+    }
+    
 
     func isCurrencyPairSelected(baseCurrency: Currency, quoteCurrency: Currency? = nil) -> Bool {
         if let quoteCurrency = quoteCurrency {
@@ -141,6 +169,10 @@ class Exchange {
         return statusBarCurrencyPairs.first(where: { $0.customCode == customCode })
     }
 
+    func menuCurrencyPairs(withCustomCode customCode: String) -> CurrencyPair? {
+        return menuCurrencyPairs.first(where: { $0.customCode == customCode })
+    }
+    
     internal func setPrice(_ price: Double, for currencyPair: CurrencyPair) {
         currencyPrices[currencyPair.customCode] = price
     }

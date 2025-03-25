@@ -94,7 +94,7 @@ class CoinGecko: Exchange {
     
     // 处理已选择的币种对
     private func processSelectedCurrencyPairs() {
-        menuBarCurrencies = menuBarCurrencies.compactMap { currencyPair in
+        menuCurrencyPairs = menuCurrencyPairs.compactMap { currencyPair in
             if let newCurrencyPair = availableCurrencyPairs.first(where: { $0 == currencyPair }) {
                 return newCurrencyPair
             }
@@ -109,7 +109,7 @@ class CoinGecko: Exchange {
         }
         
         // 如果没有选择任何币种，选择默认币种 - 修复三元运算符错误
-        if menuBarCurrencies.count == 0 {
+        if menuCurrencyPairs.count == 0 {
             let localCurrency = Currency(code: Locale.current.currencyCode)
             // 修复的逻辑：先尝试匹配本地货币，然后尝试USD，最后使用第一个可用的币种对
             let currencyPair: CurrencyPair?
@@ -122,18 +122,22 @@ class CoinGecko: Exchange {
             }
             
             if let currencyPair = currencyPair {
-                menuBarCurrencies.append(currencyPair)
+                menuCurrencyPairs.append(currencyPair)
             }
         }
     }
     
     override internal func fetch() {
         
-        guard !TickerConfig.userDefaultsFetchCoingeckoCoinIds.isEmpty else { return }
-        
-        let coinIDs = TickerConfig.userDefaultsFetchCoingeckoCoinIds.joined(separator: ",")
-        
-        let quoteCurrencies = "usd"
+//        guard !TickerConfig.userDefaultsFetchCoingeckoCoinIds.isEmpty else { return }
+//        
+//        let coinIDs = TickerConfig.userDefaultsFetchCoingeckoCoinIds.joined(separator: ",")
+//        
+//        let quoteCurrencies = "usd"
+//
+        guard !menuCurrencyPairs.isEmpty else { return }
+        let coinIDs = menuCurrencyPairs.map { $0.customCode }.joined(separator: ",")
+        let quoteCurrencies = Set(menuCurrencyPairs.map { $0.quoteCurrency.code.lowercased() }).joined(separator: ",")
         
         // 修复语句分隔符错误
         let apiPath = String(format: Constants.PriceAPIPathFormat, coinIDs, quoteCurrencies)
@@ -141,7 +145,7 @@ class CoinGecko: Exchange {
         
         requestAPI(apiPath).map { [weak self] result in
             guard let strongSelf = self else { return }
-            for currencyPair in strongSelf.menuBarCurrencies {
+            for currencyPair in strongSelf.menuCurrencyPairs {
                 let coinID = currencyPair.customCode
                 let quoteCode = currencyPair.quoteCurrency.code.lowercased()
                 if let price = result.json[coinID][quoteCode].double {

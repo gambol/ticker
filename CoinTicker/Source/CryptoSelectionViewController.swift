@@ -146,8 +146,10 @@ class CryptoSelectionViewController: NSViewController {
              if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
                  appDelegate.cryptoSelectionPopover?.close()
                  
-                 TickerConfig.savePopoverSelection(tempSelectedCurrencies)
-                 TickerConfig.saveFetchCoinIds(tempSelectedCoinGeckoIds)
+//                 TickerConfig.savePopoverSelection(tempSelectedCurrencies)
+//                 TickerConfig.saveFetchCoinIds(tempSelectedCoinGeckoIds)
+                 
+                 appDelegate.applySelectedMenuBarCurrencies(tempSelectedCurrencies)
                  // 应用用户选择
 //                 appDelegate.applySelectedCurrencies(tempSelectedCurrencies)
              }

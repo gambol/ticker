@@ -157,8 +157,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
            closedPopover == cryptoSelectionPopover,
            let cryptoVC = closedPopover.contentViewController as? CryptoSelectionViewController {
             
-            TickerConfig.savePopoverSelection(cryptoVC.tempSelectedCurrencies)
-            TickerConfig.saveFetchCoinIds(cryptoVC.tempSelectedCoinGeckoIds)
+//            TickerConfig.savePopoverSelection(cryptoVC.tempSelectedCurrencies)
+//            TickerConfig.saveFetchCoinIds(cryptoVC.tempSelectedCoinGeckoIds)
+            applySelectedMenuBarCurrencies(cryptoVC.tempSelectedCurrencies)
             updateMenuItems()
         }
     }
@@ -248,7 +249,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if let baseCurrency = menuItem.parent?.representedObject as? Currency, let quoteCurrency = menuItem.representedObject as? Currency, currentExchange.statusBarCurrencyPairs.count > 1 || currentExchange.statusBarCurrencyPairs.first != CurrencyPair(baseCurrency: baseCurrency, quoteCurrency: quoteCurrency) {
             // Reset exchange fetching
-            currentExchange.toggleCurrencyPair(baseCurrency: baseCurrency, quoteCurrency: quoteCurrency)
+            currentExchange.toggleStatusBarCurrencyPair(baseCurrency: baseCurrency, quoteCurrency: quoteCurrency)
 
             // Update menus
             updateMenuItems()
@@ -424,7 +425,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let quoteCurrency = currencyPair.quoteCurrency
         
         // Toggle selection state
-        currentExchange.toggleCurrencyPair(baseCurrency: baseCurrency, quoteCurrency: quoteCurrency)
+        currentExchange.toggleStatusBarCurrencyPair(baseCurrency: baseCurrency, quoteCurrency: quoteCurrency)
         
         // Update menu item state
         sender.state = currentExchange.isCurrencyPairSelected(baseCurrency: baseCurrency) ? .on : .off
@@ -455,7 +456,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 return "\(currencyPair.baseCurrency.code): \(priceString)"
             }
 
-            self.statusItem.title = priceStrings.joined(separator: " • ")
+            let title = priceStrings.joined(separator: " • ")
+                
+                // 添加判断，如果title长度为0，则显示"TICK"
+            self.statusItem.title = title.isEmpty ? "TICK" : title
         }
     }
     
@@ -554,8 +558,9 @@ extension AppDelegate: ExchangeDelegate {
     func applySelectedCurrencies(_ selectedCurrencyCodes: Set<String>) {
         // Clear current selections
         let currentSelected = currentExchange.statusBarCurrencyPairs
+        // 这个是开关. 开一个 关一个
         for pair in currentSelected {
-            currentExchange.toggleCurrencyPair(baseCurrency: pair.baseCurrency, quoteCurrency: pair.quoteCurrency)
+            currentExchange.toggleStatusBarCurrencyPair(baseCurrency: pair.baseCurrency, quoteCurrency: pair.quoteCurrency)
         }
         
         // Apply new selections
@@ -563,7 +568,7 @@ extension AppDelegate: ExchangeDelegate {
             if let currencyPair = currentExchange.availableCurrencyPairs.first(where: { $0.baseCurrency.code == code }) {
                 // Get default quote currency (USD/USDT)
                 let quoteCurrency = currencyPair.quoteCurrency
-                currentExchange.toggleCurrencyPair(baseCurrency: currencyPair.baseCurrency, quoteCurrency: quoteCurrency)
+                currentExchange.toggleStatusBarCurrencyPair(baseCurrency: currencyPair.baseCurrency, quoteCurrency: quoteCurrency)
             }
         }
         
@@ -572,6 +577,21 @@ extension AppDelegate: ExchangeDelegate {
         
         // Update menu items and prices
         updateMenuItems()
+        
+        updatePrices()
+    }
+    
+    
+    // menubar 是全集
+    func applySelectedMenuBarCurrencies(_ selectedCurrencyCodes: Set<String>) {
+        currentExchange.saveAllMenuCurrencyPair(selectedCurrencyCodes)
+        
+        TickerConfig.savePopoverSelection(selectedCurrencyCodes)
+        
+        // Update menu items and prices
+        updateMenuItems()
+        
+        updatePrices()
     }
 
 }
